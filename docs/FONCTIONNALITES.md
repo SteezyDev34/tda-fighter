@@ -12,8 +12,7 @@ Dernière mise à jour : 20/10/2026
 |---|---|
 | Noter ce que j'ai mangé pour 5 repas (petit-déjeuner, collation du matin, déjeuner, collation de l'après-midi, dîner) | ✅ |
 | Repas proposé automatiquement selon l'heure | ✅ |
-| Barre de recherche d'aliments dans la base Ciqual (ANSES), sans IA : les apports viennent directement de la base | ✅ (fichier Ciqual à ajouter) |
-| Recherche des produits du commerce dans Open Food Facts | ✅ |
+| Barre de recherche d'aliments et de produits dans Open Food Facts, sans IA : les apports viennent directement de la base | ✅ |
 | Scan du code-barres (caméra sur Android/Chrome, sinon saisie du code) | ✅ |
 | Choix de la quantité en grammes (raccourcis 50, 100, 150, 200 g ou portion du produit) avec aperçu des apports | ✅ |
 | Enregistrer un repas (plusieurs aliments) sous un nom et le retrouver dans la recherche « Mes repas » | ✅ |

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { findBarcode, normalize, scale, searchCiqual, searchOff, SOURCE_LABEL, type Food } from "./foods";
+import { findBarcode, normalize, scale, searchOff, SOURCE_LABEL, type Food } from "./foods";
 import type { JournalEntry, SavedMeal } from "./types";
 
 type NewEntry = Pick<JournalEntry, "description" | "nutrients" | "food">;
@@ -74,7 +74,6 @@ function BarcodeScanner({ onCode, onClose }: { onCode: (code: string) => void; o
 
 export function FoodPicker({ savedMeals, onAdd }: Props) {
   const [query, setQuery] = useState("");
-  const [ciqual, setCiqual] = useState<Food[]>([]);
   const [off, setOff] = useState<Food[]>([]);
   const [searching, setSearching] = useState(false);
   const [picked, setPicked] = useState<Food | null>(null);
@@ -84,12 +83,10 @@ export function FoodPicker({ savedMeals, onAdd }: Props) {
 
   useEffect(() => {
     if (!query.trim()) {
-      setCiqual([]);
       setOff([]);
       return;
     }
     let stale = false;
-    searchCiqual(query).then((r) => !stale && setCiqual(r));
     setSearching(true);
     const t = setTimeout(() => {
       searchOff(query).then((r) => {
@@ -205,18 +202,13 @@ export function FoodPicker({ savedMeals, onAdd }: Props) {
           ))}
         </ResultGroup>
       )}
-      {ciqual.length > 0 && (
-        <ResultGroup title="Aliments (Ciqual)">
-          {ciqual.map((f) => <FoodResult key={f.id} food={f} onPick={pick} />)}
-        </ResultGroup>
-      )}
       {off.length > 0 && (
-        <ResultGroup title="Produits du commerce (Open Food Facts)">
+        <ResultGroup title="Aliments et produits (Open Food Facts)">
           {off.map((f) => <FoodResult key={f.id} food={f} onPick={pick} />)}
         </ResultGroup>
       )}
-      {query.trim() && searching && <p className="small muted">Recherche des produits du commerce…</p>}
-      {query.trim() && !searching && !meals.length && !ciqual.length && !off.length && (
+      {query.trim() && searching && <p className="small muted">Recherche dans Open Food Facts…</p>}
+      {query.trim() && !searching && !meals.length && !off.length && (
         <p className="small muted">Rien trouvé pour « {query} ». Essaie un mot plus simple, par exemple « riz » ou « yaourt ».</p>
       )}
     </div>

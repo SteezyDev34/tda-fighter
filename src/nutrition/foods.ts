@@ -4,7 +4,7 @@ import type { Nutrients } from "./types";
 export interface Food {
   id: string;
   name: string;
-  source: "ciqual" | "off";
+  source: "off";
   brand?: string;
   per100g: Nutrients;
   /** Typical portion in grams, when the source gives one. */
@@ -12,7 +12,6 @@ export interface Food {
 }
 
 export const SOURCE_LABEL: Record<Food["source"], string> = {
-  ciqual: "Ciqual (ANSES)",
   off: "Open Food Facts",
 };
 
@@ -26,40 +25,6 @@ export const scale = (per100g: Nutrients, grams: number): Nutrients => ({
   carbs: Math.round((per100g.carbs * grams) / 10) / 10,
   fat: Math.round((per100g.fat * grams) / 10) / 10,
 });
-
-// --- Ciqual: official French food composition table, bundled as public/ciqual.json ---
-
-type CiqualRow = [code: string, name: string, kcal: number, protein: number, carbs: number, fat: number];
-let ciqual: Promise<Food[]> | null = null;
-
-function loadCiqual(): Promise<Food[]> {
-  ciqual ??= fetch(`${import.meta.env.BASE_URL}ciqual.json`)
-    .then((r) => (r.ok ? (r.json() as Promise<CiqualRow[]>) : []))
-    .then((rows) =>
-      rows.map(([code, name, kcal, protein, carbs, fat]) => ({
-        id: `ciqual:${code}`,
-        name,
-        source: "ciqual" as const,
-        per100g: { kcal, protein, carbs, fat },
-      })),
-    )
-    .catch(() => []);
-  return ciqual;
-}
-
-export async function searchCiqual(query: string, limit = 15): Promise<Food[]> {
-  const words = normalize(query).split(/\s+/).filter(Boolean);
-  if (!words.length) return [];
-  const foods = await loadCiqual();
-  return foods
-    .filter((f) => {
-      const name = normalize(f.name);
-      return words.every((w) => name.includes(w));
-    })
-    // Shorter names first: "Œuf, cru" before "Œuf, jaune, cuit, en poudre".
-    .sort((a, b) => a.name.length - b.name.length)
-    .slice(0, limit);
-}
 
 // --- Open Food Facts: packaged products, by name or barcode ---
 
@@ -95,7 +60,7 @@ function fromOff(p: OffProduct): Food | null {
   };
 }
 
-export async function searchOff(query: string, limit = 10): Promise<Food[]> {
+export async function searchOff(query: string, limit = 20): Promise<Food[]> {
   if (normalize(query).length < 3) return [];
   try {
     const url = `${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&json=1&page_size=${limit}&fields=${OFF_FIELDS}&lc=fr&cc=fr`;
