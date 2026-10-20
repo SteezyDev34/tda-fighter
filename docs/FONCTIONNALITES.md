@@ -12,8 +12,8 @@ Dernière mise à jour : 20/10/2026
 |---|---|
 | Noter ce que j'ai mangé en une ligne, pour 5 repas (petit-déjeuner, collation du matin, déjeuner, collation de l'après-midi, dîner) | ✅ |
 | Repas proposé automatiquement selon l'heure | ✅ |
-| Estimation automatique des calories, protéines, glucides et lipides de chaque aliment noté | 🧪 |
-| Corriger ou saisir à la main les apports d'un aliment | ✅ |
+| Reconnaissance automatique des calories, protéines, glucides et lipides de chaque aliment noté (pas de saisie manuelle) | 🧪 |
+| Bouton « Réessayer » si la reconnaissance a échoué | ✅ |
 | Graphique des apports du jour comparés aux objectifs, mis à jour à chaque aliment noté | ✅ |
 | Détail par repas au survol ou au tap sur une barre du graphique | ✅ |
 | Rappel doux si un repas n'est pas noté | 📋 |

@@ -39,15 +39,19 @@ export function useNutrition() {
   const updateEntry = (id: string, patch: Partial<JournalEntry>) =>
     setJournal((j) => j.map((e) => (e.id === id ? { ...e, ...patch } : e)));
 
-  const addEntry = (entry: Omit<JournalEntry, "id" | "createdAt">) => {
-    const id = crypto.randomUUID();
-    setJournal((j) => [{ ...entry, id, createdAt: new Date().toISOString() }, ...j]);
-    if (entry.nutrients) return;
+  /** The AI reads the description and fills in the nutrients: no manual input. */
+  const runEstimate = (id: string, description: string) => {
     setEstimating((ids) => [...ids, id]);
-    estimate(entry.description, profile).then((nutrients) => {
+    estimate(description, profile).then((nutrients) => {
       if (nutrients) updateEntry(id, { nutrients });
       setEstimating((ids) => ids.filter((x) => x !== id));
     });
+  };
+
+  const addEntry = (entry: Omit<JournalEntry, "id" | "createdAt">) => {
+    const id = crypto.randomUUID();
+    setJournal((j) => [{ ...entry, id, createdAt: new Date().toISOString() }, ...j]);
+    runEstimate(id, entry.description);
   };
 
   const removeEntry = (id: string) => setJournal((j) => j.filter((e) => e.id !== id));
@@ -55,7 +59,7 @@ export function useNutrition() {
   return {
     journal,
     addEntry,
-    updateEntry,
+    retryEstimate: (e: JournalEntry) => runEstimate(e.id, e.description),
     removeEntry,
     estimating,
     profile,

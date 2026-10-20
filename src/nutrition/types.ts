@@ -32,7 +32,7 @@ export interface JournalEntry {
   slot: MealSlot;
   description: string;
   createdAt: string;
-  /** Estimated by the AI, editable by hand. Missing while the estimate runs or if it failed. */
+  /** Recognised by the AI from the description. Missing while the estimate runs or if it failed. */
   nutrients?: Nutrients;
 }
 
