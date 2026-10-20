@@ -71,3 +71,18 @@ button.link { background: none; padding: 4px; color: var(--accent); font-size: 0
 }
 .tabs button { background: none; border-radius: 0; color: var(--muted); padding: 14px 4px; }
 .tabs button[aria-current="page"] { color: var(--accent); }
+
+.small { font-size: 0.85rem; }
+.editor { padding-top: 8px; }
+.nutrient-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+.meter { display: flex; flex-direction: column; gap: 6px; width: 100%; text-align: left; background: none; padding: 6px 0; border-radius: 8px; }
+.meter-label { font-weight: 700; }
+.meter-value { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 400; }
+.meter-value strong { color: var(--ink); }
+.meter-track { display: block; height: 12px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.meter-fill { display: block; height: 100%; border-radius: 99px; background: var(--accent); transition: width 0.4s; }
+.meter-note { font-size: 0.82rem; color: var(--muted); font-weight: 400; }
+.meter-note.over { color: var(--error); font-weight: 700; }
+.meter-detail { display: flex; flex-direction: column; gap: 4px; font-size: 0.82rem; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .meter-fill { transition: none; } }

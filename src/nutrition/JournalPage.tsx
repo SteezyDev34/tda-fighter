@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { today } from "../lib/storage";
-import { MEAL_SLOTS, type MealSlot } from "./types";
+import { DailyIntake } from "./DailyIntake";
+import { MEAL_SLOTS, NUTRIENTS, type JournalEntry, type MealSlot, type Nutrients } from "./types";
 import type { NutritionState } from "./useNutrition";
 
 /** Guess the meal slot from the current hour so logging is one step. */
@@ -13,9 +14,44 @@ function currentSlot(): MealSlot {
   return "dinner";
 }
 
-export function JournalPage({ journal, addEntry, removeEntry }: NutritionState) {
+const ZERO: Nutrients = { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+
+/** Inline editor so an estimate can be corrected, or entered by hand. */
+function NutrientEditor({ entry, onSave, onCancel }: {
+  entry: JournalEntry;
+  onSave: (n: Nutrients) => void;
+  onCancel: () => void;
+}) {
+  const [values, setValues] = useState<Nutrients>(entry.nutrients ?? ZERO);
+  return (
+    <div className="stack tight editor">
+      <div className="nutrient-grid">
+        {NUTRIENTS.map(({ key, label, unit }) => (
+          <label key={key} className="stack tight">
+            <span className="small muted">{label} ({unit})</span>
+            <input
+              id={`${entry.id}-${key}`}
+              type="number"
+              inputMode="numeric"
+              min={0}
+              value={values[key]}
+              onChange={(e) => setValues({ ...values, [key]: Number(e.target.value) })}
+            />
+          </label>
+        ))}
+      </div>
+      <div className="row">
+        <button className="primary" onClick={() => onSave(values)}>Enregistrer</button>
+        <button onClick={onCancel}>Annuler</button>
+      </div>
+    </div>
+  );
+}
+
+export function JournalPage({ journal, addEntry, updateEntry, removeEntry, estimating, profile }: NutritionState) {
   const [slot, setSlot] = useState<MealSlot>(currentSlot);
   const [text, setText] = useState("");
+  const [editing, setEditing] = useState<string | null>(null);
   const date = today();
   const todays = journal.filter((e) => e.date === date);
 
@@ -26,9 +62,17 @@ export function JournalPage({ journal, addEntry, removeEntry }: NutritionState) 
     setText("");
   };
 
+  const macroLine = (e: JournalEntry) => {
+    if (estimating.includes(e.id)) return "Estimation en cours…";
+    if (!e.nutrients) return "Apports non estimés";
+    const n = e.nutrients;
+    return `${n.kcal} kcal · P ${n.protein} g · G ${n.carbs} g · L ${n.fat} g`;
+  };
+
   return (
     <section className="stack">
       <h1>Journal du jour</h1>
+      <DailyIntake entries={todays} targets={profile.targets} />
       <form className="card stack" onSubmit={submit}>
         <label htmlFor="slot">Repas</label>
         <select id="slot" value={slot} onChange={(e) => setSlot(e.target.value as MealSlot)}>
@@ -58,9 +102,27 @@ export function JournalPage({ journal, addEntry, removeEntry }: NutritionState) 
               </span>
             </div>
             {entries.map((e) => (
-              <div key={e.id} className="row between entry">
-                <span>{e.description}</span>
-                <button className="link" onClick={() => removeEntry(e.id)}>Retirer</button>
+              <div key={e.id} className="entry stack tight">
+                <div className="row between">
+                  <span>{e.description}</span>
+                  <span className="row">
+                    <button className="link" onClick={() => setEditing(e.id)}>
+                      {e.nutrients ? "Corriger" : "Saisir"}
+                    </button>
+                    <button className="link" onClick={() => removeEntry(e.id)}>Retirer</button>
+                  </span>
+                </div>
+                <span className="small muted">{macroLine(e)}</span>
+                {editing === e.id && (
+                  <NutrientEditor
+                    entry={e}
+                    onCancel={() => setEditing(null)}
+                    onSave={(nutrients) => {
+                      updateEntry(e.id, { nutrients });
+                      setEditing(null);
+                    }}
+                  />
+                )}
               </div>
             ))}
           </div>

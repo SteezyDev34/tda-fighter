@@ -11,6 +11,20 @@ export type MealSlot = (typeof MEAL_SLOTS)[number]["id"];
 export const slotLabel = (slot: MealSlot) =>
   MEAL_SLOTS.find((s) => s.id === slot)?.label ?? slot;
 
+export interface Nutrients {
+  kcal: number;
+  protein: number; // g
+  carbs: number; // g
+  fat: number; // g
+}
+
+export const NUTRIENTS: { key: keyof Nutrients; label: string; unit: string }[] = [
+  { key: "kcal", label: "Calories", unit: "kcal" },
+  { key: "protein", label: "Protéines", unit: "g" },
+  { key: "carbs", label: "Glucides", unit: "g" },
+  { key: "fat", label: "Lipides", unit: "g" },
+];
+
 /** One line of the food journal: what was actually eaten. */
 export interface JournalEntry {
   id: string;
@@ -18,6 +32,8 @@ export interface JournalEntry {
   slot: MealSlot;
   description: string;
   createdAt: string;
+  /** Estimated by the AI, editable by hand. Missing while the estimate runs or if it failed. */
+  nutrients?: Nutrients;
 }
 
 /** The criteria the AI must respect when it suggests meals. */
@@ -28,6 +44,8 @@ export interface NutritionProfile {
   allergies: string;
   budget: string;
   cookingTime: string;
+  /** Daily intake goals shown on the journal chart. */
+  targets: Nutrients;
 }
 
 export interface SuggestedMeal {
@@ -57,4 +75,5 @@ export const EMPTY_PROFILE: NutritionProfile = {
   allergies: "",
   budget: "",
   cookingTime: "",
+  targets: { kcal: 2200, protein: 130, carbs: 250, fat: 70 },
 };

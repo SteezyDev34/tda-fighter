@@ -1,7 +1,9 @@
-import type { NutritionProfile } from "./types";
+import { NUTRIENTS, type NutritionProfile } from "./types";
 import type { NutritionState } from "./useNutrition";
 
-const FIELDS: { key: keyof NutritionProfile; label: string; placeholder: string }[] = [
+type TextField = Exclude<keyof NutritionProfile, "targets">;
+
+const FIELDS: { key: TextField; label: string; placeholder: string }[] = [
   { key: "goal", label: "Mon objectif", placeholder: "Ex. : plus d'énergie, perdre 3 kg, prendre du muscle" },
   { key: "likes", label: "J'aime", placeholder: "Ex. : poulet, riz, avocat, chocolat noir" },
   { key: "dislikes", label: "Je n'aime pas", placeholder: "Ex. : poisson, champignons" },
@@ -27,6 +29,27 @@ export function ProfilePage({ profile, setProfile }: NutritionState) {
             />
           </div>
         ))}
+      </div>
+      <div className="card stack">
+        <h2>Objectifs journaliers</h2>
+        <p className="muted small">Ils servent de repère au graphique du journal.</p>
+        <div className="nutrient-grid">
+          {NUTRIENTS.map(({ key, label, unit }) => (
+            <label key={key} className="stack tight">
+              <span className="small muted">{label} ({unit})</span>
+              <input
+                id={`target-${key}`}
+                type="number"
+                inputMode="numeric"
+                min={0}
+                value={profile.targets[key]}
+                onChange={(e) =>
+                  setProfile({ ...profile, targets: { ...profile.targets, [key]: Number(e.target.value) } })
+                }
+              />
+            </label>
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -13,12 +13,21 @@ Si les ressources ne couvrent pas la question, dis-le et donne un conseil pruden
 Tu ne poses pas de diagnostic médical ; en cas de doute de santé, oriente vers un professionnel.`;
 
 function describeContext(profile: NutritionProfile, journal: JournalEntry[]) {
-  const criteria = Object.entries(profile)
-    .filter(([, v]) => v.trim())
-    .map(([k, v]) => `- ${k} : ${v}`)
-    .join("\n");
+  const { targets, ...text } = profile;
+  const criteria = [
+    ...Object.entries(text)
+      .filter(([, v]) => v.trim())
+      .map(([k, v]) => `- ${k} : ${v}`),
+    ...(targets
+      ? [`- objectifs journaliers : ${targets.kcal} kcal, ${targets.protein} g protéines, ${targets.carbs} g glucides, ${targets.fat} g lipides`]
+      : []),
+  ].join("\n");
   const eaten = journal
-    .map((e) => `- ${e.date} · ${slotLabel(e.slot)} : ${e.description}`)
+    .map((e) => {
+      const n = e.nutrients;
+      const macros = n ? ` (${n.kcal} kcal, P ${n.protein} g, G ${n.carbs} g, L ${n.fat} g)` : "";
+      return `- ${e.date} · ${slotLabel(e.slot)} : ${e.description}${macros}`;
+    })
     .join("\n");
   return `<criteres>\n${criteria || "Aucun critère renseigné."}\n</criteres>
 <journal date_du_jour="${new Date().toISOString().slice(0, 10)}">\n${eaten || "Journal vide."}\n</journal>`;
