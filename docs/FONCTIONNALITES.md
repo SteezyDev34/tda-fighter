@@ -10,10 +10,13 @@ Dernière mise à jour : 20/10/2026
 ### Écran Journal
 | Fonctionnalité | Statut |
 |---|---|
-| Noter ce que j'ai mangé en une ligne, pour 5 repas (petit-déjeuner, collation du matin, déjeuner, collation de l'après-midi, dîner) | ✅ |
+| Noter ce que j'ai mangé pour 5 repas (petit-déjeuner, collation du matin, déjeuner, collation de l'après-midi, dîner) | ✅ |
 | Repas proposé automatiquement selon l'heure | ✅ |
-| Reconnaissance automatique des calories, protéines, glucides et lipides de chaque aliment noté (pas de saisie manuelle) | 🧪 |
-| Bouton « Réessayer » si la reconnaissance a échoué | ✅ |
+| Barre de recherche d'aliments dans la base Ciqual (ANSES), sans IA : les apports viennent directement de la base | ✅ (fichier Ciqual à ajouter) |
+| Recherche des produits du commerce dans Open Food Facts | ✅ |
+| Scan du code-barres (caméra sur Android/Chrome, sinon saisie du code) | ✅ |
+| Choix de la quantité en grammes (raccourcis 50, 100, 150, 200 g ou portion du produit) avec aperçu des apports | ✅ |
+| Enregistrer un repas (plusieurs aliments) sous un nom et le retrouver dans la recherche « Mes repas » | ✅ |
 | Graphique des apports du jour comparés aux objectifs, mis à jour à chaque aliment noté | ✅ |
 | Détail par repas au survol ou au tap sur une barre du graphique | ✅ |
 | Rappel doux si un repas n'est pas noté | 📋 |
@@ -23,8 +26,8 @@ Dernière mise à jour : 20/10/2026
 |---|---|
 | Générer un repas ou une journée complète (5 repas) à partir du journal, des critères et des ressources | 🧪 |
 | Recette simple et explication de pourquoi le repas me convient | 🧪 |
-| Bouton « Je l'ai mangé » qui ajoute le repas au journal | ✅ |
 | Liste de courses générée depuis les repas, regroupée par rayon, cochable | 🧪 |
+| Noter un repas suggéré dans le journal en un tap, avec les aliments de la base | 📋 |
 | Remplacer un plat en un tap | 📋 |
 | Retirer de la liste ce que j'ai déjà à la maison | 📋 |
 

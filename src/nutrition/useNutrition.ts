@@ -4,8 +4,8 @@ import {
   EMPTY_PROFILE,
   type JournalEntry,
   type MealPlan,
-  type Nutrients,
   type NutritionProfile,
+  type SavedMeal,
 } from "./types";
 
 function usePersisted<T>(key: string, fallback: T) {
@@ -14,54 +14,47 @@ function usePersisted<T>(key: string, fallback: T) {
   return [value, setValue] as const;
 }
 
-async function estimate(description: string, profile: NutritionProfile): Promise<Nutrients | null> {
-  try {
-    const res = await fetch("/api/estimate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ description, profile }),
-    });
-    return res.ok ? ((await res.json()) as Nutrients) : null;
-  } catch {
-    return null;
-  }
-}
-
 export function useNutrition() {
-  const [journal, setJournal] = usePersisted<JournalEntry[]>("journal", []);
+  const [storedJournal, setJournal] = usePersisted<JournalEntry[]>("journal", []);
   const [storedProfile, setProfile] = usePersisted<NutritionProfile>("profile", EMPTY_PROFILE);
   const [plan, setPlan] = usePersisted<MealPlan | null>("plan", null);
-  const [estimating, setEstimating] = useState<string[]>([]);
+  const [savedMeals, setSavedMeals] = usePersisted<SavedMeal[]>("saved-meals", []);
 
   // Profiles saved before targets existed get the default targets.
   const profile = { ...EMPTY_PROFILE, ...storedProfile };
+  // Lines logged before the food database have no values: count them as zero.
+  const journal = storedJournal.map((e) => ({
+    ...e,
+    nutrients: e.nutrients ?? { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+  }));
 
-  const updateEntry = (id: string, patch: Partial<JournalEntry>) =>
-    setJournal((j) => j.map((e) => (e.id === id ? { ...e, ...patch } : e)));
-
-  /** The AI reads the description and fills in the nutrients: no manual input. */
-  const runEstimate = (id: string, description: string) => {
-    setEstimating((ids) => [...ids, id]);
-    estimate(description, profile).then((nutrients) => {
-      if (nutrients) updateEntry(id, { nutrients });
-      setEstimating((ids) => ids.filter((x) => x !== id));
-    });
-  };
-
-  const addEntry = (entry: Omit<JournalEntry, "id" | "createdAt">) => {
-    const id = crypto.randomUUID();
-    setJournal((j) => [{ ...entry, id, createdAt: new Date().toISOString() }, ...j]);
-    runEstimate(id, entry.description);
-  };
+  const addEntries = (entries: Omit<JournalEntry, "id" | "createdAt">[]) =>
+    setJournal((j) => [
+      ...entries.map((e) => ({ ...e, id: crypto.randomUUID(), createdAt: new Date().toISOString() })),
+      ...j,
+    ]);
 
   const removeEntry = (id: string) => setJournal((j) => j.filter((e) => e.id !== id));
 
+  const saveMeal = (name: string, entries: JournalEntry[]) =>
+    setSavedMeals((m) => [
+      {
+        id: crypto.randomUUID(),
+        name,
+        items: entries.map(({ description, nutrients, food }) => ({ description, nutrients, food })),
+      },
+      ...m,
+    ]);
+
+  const deleteMeal = (id: string) => setSavedMeals((m) => m.filter((x) => x.id !== id));
+
   return {
     journal,
-    addEntry,
-    retryEstimate: (e: JournalEntry) => runEstimate(e.id, e.description),
+    addEntries,
     removeEntry,
-    estimating,
+    savedMeals,
+    saveMeal,
+    deleteMeal,
     profile,
     setProfile,
     plan,

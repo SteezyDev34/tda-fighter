@@ -32,8 +32,17 @@ export interface JournalEntry {
   slot: MealSlot;
   description: string;
   createdAt: string;
-  /** Recognised by the AI from the description. Missing while the estimate runs or if it failed. */
-  nutrients?: Nutrients;
+  /** Computed from the food database for the chosen quantity. */
+  nutrients: Nutrients;
+  /** The database food this line comes from. */
+  food?: { id: string; grams: number };
+}
+
+/** A meal the user saved to log it again in one tap. */
+export interface SavedMeal {
+  id: string;
+  name: string;
+  items: { description: string; nutrients: Nutrients; food?: { id: string; grams: number } }[];
 }
 
 /** The criteria the AI must respect when it suggests meals. */

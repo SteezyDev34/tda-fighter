@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { today } from "../lib/storage";
 import { DailyIntake } from "./DailyIntake";
+import { FoodPicker } from "./FoodPicker";
 import { MEAL_SLOTS, type JournalEntry, type MealSlot } from "./types";
 import type { NutritionState } from "./useNutrition";
 
@@ -14,52 +15,67 @@ function currentSlot(): MealSlot {
   return "dinner";
 }
 
-export function JournalPage({ journal, addEntry, retryEstimate, removeEntry, estimating, profile }: NutritionState) {
+const macroLine = ({ nutrients: n }: JournalEntry) =>
+  `${Math.round(n.kcal)} kcal · P ${Math.round(n.protein)} g · G ${Math.round(n.carbs)} g · L ${Math.round(n.fat)} g`;
+
+/** Saves the foods of one meal under a name, to log them again in one tap. */
+function SaveMeal({ entries, onSave }: { entries: JournalEntry[]; onSave: (name: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  if (entries.length < 2) return null;
+  if (!open) {
+    return <button className="link" onClick={() => setOpen(true)}>Enregistrer ce repas</button>;
+  }
+  return (
+    <form
+      className="row"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!name.trim()) return;
+        onSave(name.trim());
+        setOpen(false);
+        setName("");
+      }}
+    >
+      <input
+        id={`meal-name-${entries[0].id}`}
+        placeholder="Nom du repas, ex. : Petit-déj du matin"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        autoFocus
+      />
+      <button className="primary">OK</button>
+    </form>
+  );
+}
+
+export function JournalPage({ journal, addEntries, removeEntry, savedMeals, saveMeal, profile }: NutritionState) {
   const [slot, setSlot] = useState<MealSlot>(currentSlot);
-  const [text, setText] = useState("");
   const date = today();
   const todays = journal.filter((e) => e.date === date);
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!text.trim()) return;
-    addEntry({ date, slot, description: text.trim() });
-    setText("");
-  };
-
-  const macroLine = (e: JournalEntry) => {
-    if (estimating.includes(e.id)) return "Estimation en cours…";
-    if (!e.nutrients) return null;
-    const n = e.nutrients;
-    return `${n.kcal} kcal · P ${n.protein} g · G ${n.carbs} g · L ${n.fat} g`;
-  };
 
   return (
     <section className="stack">
       <h1>Journal du jour</h1>
       <DailyIntake entries={todays} targets={profile.targets} />
-      <form className="card stack" onSubmit={submit}>
+
+      <div className="card stack">
         <label htmlFor="slot">Repas</label>
         <select id="slot" value={slot} onChange={(e) => setSlot(e.target.value as MealSlot)}>
           {MEAL_SLOTS.map((s) => (
             <option key={s.id} value={s.id}>{s.label}</option>
           ))}
         </select>
-        <label htmlFor="what">Qu'est-ce que tu as mangé ?</label>
-        <input
-          id="what"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Ex. : 2 œufs, pain complet, café"
-          autoComplete="off"
+        <FoodPicker
+          savedMeals={savedMeals}
+          onAdd={(items) => addEntries(items.map((i) => ({ ...i, date, slot })))}
         />
-        <button className="primary">Noter</button>
-      </form>
+      </div>
 
       {MEAL_SLOTS.map((s) => {
         const entries = todays.filter((e) => e.slot === s.id);
         return (
-          <div key={s.id} className="card">
+          <div key={s.id} className="card stack tight">
             <div className="row between">
               <strong>{s.label}</strong>
               <span className={entries.length ? "pill ok" : "pill"}>
@@ -72,16 +88,10 @@ export function JournalPage({ journal, addEntry, retryEstimate, removeEntry, est
                   <span>{e.description}</span>
                   <button className="link" onClick={() => removeEntry(e.id)}>Retirer</button>
                 </div>
-                {macroLine(e) ? (
-                  <span className="small muted">{macroLine(e)}</span>
-                ) : (
-                  <span className="row small muted">
-                    Apports pas encore reconnus.
-                    <button className="link" onClick={() => retryEstimate(e)}>Réessayer</button>
-                  </span>
-                )}
+                <span className="small muted">{macroLine(e)}</span>
               </div>
             ))}
+            <SaveMeal entries={entries} onSave={(name) => saveMeal(name, entries)} />
           </div>
         );
       })}

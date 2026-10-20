@@ -9,9 +9,9 @@ const fmt = (n: number) => Math.round(n).toLocaleString("fr-FR");
  */
 export function DailyIntake({ entries, targets }: { entries: JournalEntry[]; targets: Nutrients }) {
   const [open, setOpen] = useState<keyof Nutrients | null>(null);
-  const counted = entries.filter((e) => e.nutrients);
+  const counted = entries;
   const total = (key: keyof Nutrients) =>
-    counted.reduce((sum, e) => sum + (e.nutrients?.[key] ?? 0), 0);
+    counted.reduce((sum, e) => sum + e.nutrients[key], 0);
 
   return (
     <div className="card stack" aria-label="Apports du jour">
@@ -51,7 +51,7 @@ export function DailyIntake({ entries, targets }: { entries: JournalEntry[]; tar
                 {counted.map((e) => (
                   <span key={e.id} className="row between">
                     <span>{slotLabel(e.slot)} · {e.description}</span>
-                    <span>{fmt(e.nutrients![key])} {unit}</span>
+                    <span>{fmt(e.nutrients[key])} {unit}</span>
                   </span>
                 ))}
               </span>

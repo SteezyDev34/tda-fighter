@@ -86,3 +86,9 @@ button.link { background: none; padding: 4px; color: var(--accent); font-size: 0
 .meter-note.over { color: var(--error); font-weight: 700; }
 .meter-detail { display: flex; flex-direction: column; gap: 4px; font-size: 0.82rem; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { .meter-fill { transition: none; } }
+
+.result { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; background: var(--surface); border: 1px solid var(--line); font-weight: 400; }
+.result > span:first-child { font-weight: 700; }
+.chip { padding: 10px 12px; flex: none; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.scanner-video { width: 100%; max-width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; background: var(--line); }

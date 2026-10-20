@@ -1,11 +1,10 @@
 import { useState } from "react";
-import { today } from "../lib/storage";
 import { MEAL_SLOTS, slotLabel, type MealPlan, type MealSlot } from "./types";
 import { recentJournal, type NutritionState } from "./useNutrition";
 
 type Scope = "day" | MealSlot;
 
-export function PlannerPage({ journal, profile, plan, setPlan, addEntry }: NutritionState) {
+export function PlannerPage({ journal, profile, plan, setPlan }: NutritionState) {
   const [scope, setScope] = useState<Scope>("day");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -71,9 +70,6 @@ export function PlannerPage({ journal, profile, plan, setPlan, addEntry }: Nutri
           <ol>
             {m.steps.map((s, k) => <li key={k}>{s}</li>)}
           </ol>
-          <button onClick={() => addEntry({ date: today(), slot: m.slot, description: m.name })}>
-            Je l'ai mangé
-          </button>
         </article>
       ))}
 
