@@ -4,10 +4,17 @@ import { MEAL_SLOTS, slotLabel, type MealPlan, type MealSlot } from "./types";
 import { recentJournal, type NutritionState } from "./useNutrition";
 
 type Scope = "day" | MealSlot;
+type DayType = "training" | "rest";
+
+const DAY_TYPES: { id: DayType; label: string }[] = [
+  { id: "training", label: "Jour d'entraînement" },
+  { id: "rest", label: "Jour de repos" },
+];
 
 export function PlannerPage({ journal, profile, plan, setPlan, addEntries, rememberFood }: NutritionState) {
   const [scope, setScope] = useState<Scope>("day");
   const [logging, setLogging] = useState<number | null>(null);
+  const [dayType, setDayType] = useState<DayType>("training");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -20,6 +27,7 @@ export function PlannerPage({ journal, profile, plan, setPlan, addEntries, remem
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           slots: scope === "day" ? MEAL_SLOTS.map((s) => s.id) : [scope],
+          dayType,
           profile,
           journal: recentJournal(journal),
         }),
@@ -54,6 +62,14 @@ export function PlannerPage({ journal, profile, plan, setPlan, addEntries, remem
             <option key={s.id} value={s.id}>{s.label}</option>
           ))}
         </select>
+        <span className="label">Aujourd'hui, c'est un</span>
+        <div className="row">
+          {DAY_TYPES.map((d) => (
+            <button key={d.id} type="button" className="chip" aria-pressed={dayType === d.id} onClick={() => setDayType(d.id)}>
+              {d.label}
+            </button>
+          ))}
+        </div>
         <button className="primary" onClick={generate} disabled={loading}>
           {loading ? "Je réfléchis…" : "Générer"}
         </button>

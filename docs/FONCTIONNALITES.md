@@ -28,6 +28,7 @@ Dernière mise à jour : 21/10/2026
 |---|---|
 | Générer un repas ou une journée complète (5 repas) à partir du journal, des critères et des ressources | 🧪 |
 | Recette simple et explication de pourquoi le repas me convient | 🧪 |
+| Choix « jour d'entraînement » ou « jour de repos » avant de générer, pour appliquer les bons apports du protocole | ✅ |
 | Repas composés selon la méthode des apports (TP, BH, MM, E, BG) et les quantités de « 1 apport » des ressources, apports affichés sur chaque repas | 🧪 |
 | Liste de courses générée depuis les repas, regroupée par rayon, cochable | 🧪 |
 | Bouton « Ajouter au journal » sur un repas généré : chaque ingrédient est retrouvé dans Open Food Facts, je vérifie le produit et les grammes, puis j'ajoute (et je peux le rajouter si je l'ai retiré) | ✅ |

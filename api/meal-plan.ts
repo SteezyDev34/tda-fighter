@@ -23,8 +23,9 @@ const PlanSchema = z.object({
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).send("POST uniquement");
-  const { slots, profile, journal } = req.body as {
+  const { slots, dayType, profile, journal } = req.body as {
     slots: MealSlot[];
+    dayType?: "training" | "rest";
     profile: Parameters<typeof buildSystem>[0];
     journal: Parameters<typeof buildSystem>[1];
   };
@@ -39,6 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         {
           role: "user",
           content: `Propose un repas pour : ${slots.map(slotLabel).join(", ")}.
+Aujourd'hui est un ${dayType === "rest" ? "jour de repos (sans entraînement)" : "jour d'entraînement"} : utilise les apports prévus pour ce type de jour dans le protocole (jour training ou jour repos ; jour « on » ou « off » pour les diets cycliques).
 Suis la méthode des ressources :
 - calcule mes besoins et mon profil (métabolisme basal × facteur d'activité) avec mes critères « moi » ; s'ils manquent, prends mes objectifs journaliers en kcal ;
 - applique le protocole que je suis (perte de poids par défaut) pour savoir combien d'apports TP, BH, MM et E je dois avoir sur la journée, et répartis-les entre les repas demandés ;
