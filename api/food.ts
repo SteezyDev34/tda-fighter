@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import type { Food } from "../src/nutrition/foods";
+import { normalize, type Food } from "../src/nutrition/foods";
 
 /**
  * Food search and barcode lookup in Open Food Facts.
@@ -46,23 +46,53 @@ async function getJson<T>(url: string): Promise<T> {
   return (await res.json()) as T;
 }
 
+/**
+ * Open Food Facts matches words anywhere (ingredients included), so "oeuf" returns brioches.
+ * Keep the products whose name contains the searched words, best matches first.
+ */
+function rank(foods: Food[], q: string): Food[] {
+  const words = normalize(q).split(/\s+/).filter(Boolean);
+  const score = (f: Food) => {
+    const name = normalize(f.name);
+    const tokens = name.split(/[^a-z0-9]+/);
+    if (!words.every((w) => name.includes(w))) return 9;
+    let s = 0;
+    if (!name.startsWith(words[0])) s += 2;
+    // "oeuf" should match "oeufs" as a word, not "boeuf".
+    if (!words.every((w) => tokens.some((t) => t === w || t === `${w}s` || t === `${w}x`))) s += 3;
+    return s;
+  };
+  const seen = new Set<string>();
+  const ranked = foods
+    .filter((f) => !seen.has(f.id) && seen.add(f.id))
+    .map((f) => ({ f, s: score(f) }))
+    .sort((a, b) => a.s - b.s || a.f.name.length - b.f.name.length);
+  const matching = ranked.filter((r) => r.s < 9);
+  return (matching.length ? matching : ranked).slice(0, 30).map((r) => r.f);
+}
+
+async function searchalicious(q: string): Promise<Food[]> {
+  const data = await getJson<{ hits?: OffProduct[] }>(
+    `https://search.openfoodfacts.org/search?q=${encodeURIComponent(q)}&langs=fr&page_size=100&fields=${FIELDS}`,
+  );
+  return (data.hits ?? []).map(toFood).filter((f): f is Food => f !== null);
+}
+
 async function search(q: string): Promise<Food[]> {
-  const enc = encodeURIComponent(q);
+  // Products are written "Œufs" as often as "Oeufs": search both spellings.
+  const variants = [...new Set([q, q.replace(/oe/gi, "œ")])];
   try {
-    // Search-a-licious: Open Food Facts' fast search engine.
-    const data = await getJson<{ hits?: OffProduct[] }>(
-      `https://search.openfoodfacts.org/search?q=${enc}&langs=fr&page_size=24&fields=${FIELDS}`,
-    );
-    const foods = (data.hits ?? []).map(toFood).filter((f): f is Food => f !== null);
+    const results = await Promise.all(variants.map((v) => searchalicious(v).catch(() => [])));
+    const foods = rank(results.flat(), q);
     if (foods.length) return foods;
   } catch (err) {
     console.error("search-a-licious failed", err);
   }
   // Fallback: the classic search endpoint (slower).
   const data = await getJson<{ products?: OffProduct[] }>(
-    `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${enc}&search_simple=1&json=1&page_size=24&lc=fr&cc=fr&fields=${FIELDS}`,
+    `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&json=1&page_size=100&lc=fr&cc=fr&fields=${FIELDS}`,
   );
-  return (data.products ?? []).map(toFood).filter((f): f is Food => f !== null);
+  return rank((data.products ?? []).map(toFood).filter((f): f is Food => f !== null), q);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

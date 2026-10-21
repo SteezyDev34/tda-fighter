@@ -15,9 +15,15 @@ export const SOURCE_LABEL: Record<Food["source"], string> = {
   off: "Open Food Facts",
 };
 
-/** Lowercase, no accents, so "pates" finds "Pâtes". */
+/** Lowercase, no accents, "œ" as "oe", so "oeuf" finds "Œufs" and "pates" finds "Pâtes". */
 export const normalize = (s: string) =>
-  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+  s
+    .toLowerCase()
+    .replace(/œ/g, "oe")
+    .replace(/æ/g, "ae")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
 
 export const scale = (per100g: Nutrients, grams: number): Nutrients => ({
   kcal: Math.round((per100g.kcal * grams) / 100),
