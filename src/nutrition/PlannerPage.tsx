@@ -86,7 +86,10 @@ export function PlannerPage({ journal, profile, plan, setPlan, addEntries, remem
               }}
             />
           ) : m.logged ? (
-            <span className="pill ok start">Ajouté au journal ✓</span>
+            <div className="row">
+              <span className="pill ok">Ajouté au journal ✓</span>
+              <button className="link" onClick={() => setLogging(i)}>L'ajouter à nouveau</button>
+            </div>
           ) : (
             <button className="primary" onClick={() => setLogging(i)}>Ajouter au journal</button>
           )}
