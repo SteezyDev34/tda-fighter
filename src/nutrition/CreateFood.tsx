@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BarcodeScanner } from "./BarcodeScanner";
 import type { Food } from "./foods";
 import { NUTRIENTS, type Nutrients } from "./types";
 
@@ -14,6 +15,7 @@ export function CreateFood({ name: initialName = "", barcode: initialBarcode = "
   const [name, setName] = useState(initialName);
   const [brand, setBrand] = useState("");
   const [barcode, setBarcode] = useState(initialBarcode);
+  const [scanning, setScanning] = useState(false);
   const [values, setValues] = useState<Record<keyof Nutrients, string>>({ kcal: "", protein: "", carbs: "", fat: "" });
 
   const num = (v: string) => Number(v.replace(",", "."));
@@ -45,8 +47,27 @@ export function CreateFood({ name: initialName = "", barcode: initialBarcode = "
       <input id="new-food-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex. : Skyr nature" autoFocus />
       <label htmlFor="new-food-brand">Marque (facultatif)</label>
       <input id="new-food-brand" value={brand} onChange={(e) => setBrand(e.target.value)} />
-      <label htmlFor="new-food-barcode">Code-barres (facultatif)</label>
-      <input id="new-food-barcode" inputMode="numeric" value={barcode} onChange={(e) => setBarcode(e.target.value)} />
+      <label htmlFor="new-food-barcode">Code-barres du produit</label>
+      <div className="row">
+        <input
+          id="new-food-barcode"
+          inputMode="numeric"
+          value={barcode}
+          onChange={(e) => setBarcode(e.target.value)}
+          placeholder="Scanne le produit"
+        />
+        <button type="button" onClick={() => setScanning((v) => !v)} aria-pressed={scanning}>Scanner</button>
+      </div>
+      {scanning && (
+        <BarcodeScanner
+          typing={false}
+          onCode={(code) => {
+            setBarcode(code);
+            setScanning(false);
+          }}
+          onClose={() => setScanning(false)}
+        />
+      )}
       <div className="nutrient-grid">
         {NUTRIENTS.map(({ key, label, unit }) => (
           <label key={key} className="stack tight">

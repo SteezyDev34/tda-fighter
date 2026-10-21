@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { BarcodeScanner } from "./BarcodeScanner";
 import { CreateFood } from "./CreateFood";
 import { findBarcode, matchFoods, normalize, scale, searchOff, SOURCE_LABEL, type Food } from "./foods";
 import type { JournalEntry, RecentFood, SavedMeal } from "./types";
@@ -15,67 +16,6 @@ interface Props {
 }
 
 const fmt = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 1 });
-
-// BarcodeDetector is not in the TS DOM lib yet (Chrome / Android only).
-type Detector = { detect: (src: HTMLVideoElement) => Promise<{ rawValue: string }[]> };
-const BarcodeDetectorCtor = (globalThis as unknown as {
-  BarcodeDetector?: new (o: { formats: string[] }) => Detector;
-}).BarcodeDetector;
-
-/** Camera scan when the browser supports it, otherwise the code is typed. */
-function BarcodeScanner({ onCode, onClose }: { onCode: (code: string) => void; onClose: () => void }) {
-  const video = useRef<HTMLVideoElement>(null);
-  const [typed, setTyped] = useState("");
-  const [cameraError, setCameraError] = useState(!BarcodeDetectorCtor);
-
-  useEffect(() => {
-    if (!BarcodeDetectorCtor) return;
-    let stream: MediaStream | undefined;
-    let timer: number | undefined;
-    const detector = new BarcodeDetectorCtor({ formats: ["ean_13", "ean_8", "upc_a", "upc_e"] });
-    navigator.mediaDevices
-      .getUserMedia({ video: { facingMode: "environment" } })
-      .then((s) => {
-        stream = s;
-        if (!video.current) return;
-        video.current.srcObject = s;
-        void video.current.play();
-        timer = window.setInterval(async () => {
-          if (!video.current) return;
-          const [hit] = await detector.detect(video.current).catch(() => []);
-          if (hit) onCode(hit.rawValue);
-        }, 400);
-      })
-      .catch(() => setCameraError(true));
-    return () => {
-      window.clearInterval(timer);
-      stream?.getTracks().forEach((t) => t.stop());
-    };
-  }, [onCode]);
-
-  return (
-    <div className="stack scanner">
-      {!cameraError && <video ref={video} className="scanner-video" muted playsInline />}
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (typed.trim()) onCode(typed.trim());
-        }}
-      >
-        <input
-          id="barcode"
-          inputMode="numeric"
-          placeholder={cameraError ? "Tape le code-barres" : "Ou tape le code-barres"}
-          value={typed}
-          onChange={(e) => setTyped(e.target.value)}
-        />
-        <button className="primary">Chercher</button>
-      </form>
-      <button onClick={onClose}>Fermer le scanner</button>
-    </div>
-  );
-}
 
 export function FoodPicker({ savedMeals, recentFoods, customFoods, onCreateFood, onUseFood, onAdd }: Props) {
   const [query, setQuery] = useState("");

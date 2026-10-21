@@ -14,7 +14,7 @@ Dernière mise à jour : 21/10/2026
 | Repas proposé automatiquement selon l'heure | ✅ |
 | Barre de recherche d'aliments et de produits dans Open Food Facts, sans IA : les apports viennent directement de la base | ✅ |
 | Scan du code-barres (caméra sur Android/Chrome, sinon saisie du code) | ✅ |
-| Créer un aliment introuvable (nom, marque, code-barres, valeurs pour 100 g de l'étiquette) : il ressort ensuite dans la recherche, au scan et dans les repas générés | ✅ |
+| Créer un aliment introuvable (nom, marque, code-barres scanné sur le produit, valeurs pour 100 g de l'étiquette) : il ressort ensuite dans la recherche, au scan et dans les repas générés | ✅ |
 | Choix de la quantité en grammes (raccourcis 50, 100, 150, 200 g ou portion du produit) avec aperçu des apports | ✅ |
 | Aliments déjà utilisés en tête de liste, le dernier en premier, avec la dernière quantité | ✅ |
 | Enregistrer un repas (plusieurs aliments) sous un nom et le retrouver dans la recherche « Mes repas » | ✅ |
