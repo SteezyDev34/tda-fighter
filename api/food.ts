@@ -40,8 +40,9 @@ function toFood(p: OffProduct): Food | null {
   };
 }
 
-async function getJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(8000) });
+// Vercel's free plan stops a function after 10 s: stay well under it.
+async function getJson<T>(url: string, timeoutMs = 7000): Promise<T> {
+  const res = await fetch(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(timeoutMs) });
   if (!res.ok) throw new Error(`${res.status} on ${url}`);
   return (await res.json()) as T;
 }
@@ -73,26 +74,19 @@ function rank(foods: Food[], q: string): Food[] {
 
 async function searchalicious(q: string): Promise<Food[]> {
   const data = await getJson<{ hits?: OffProduct[] }>(
-    `https://search.openfoodfacts.org/search?q=${encodeURIComponent(q)}&langs=fr&page_size=100&fields=${FIELDS}`,
+    `https://search.openfoodfacts.org/search?q=${encodeURIComponent(q)}&langs=fr&page_size=50&fields=${FIELDS}`,
   );
   return (data.hits ?? []).map(toFood).filter((f): f is Food => f !== null);
 }
 
 async function search(q: string): Promise<Food[]> {
-  // Products are written "Œufs" as often as "Oeufs": search both spellings.
+  // Products are written "Œufs" as often as "Oeufs": search both spellings, in parallel.
   const variants = [...new Set([q, q.replace(/oe/gi, "œ")])];
-  try {
-    const results = await Promise.all(variants.map((v) => searchalicious(v).catch(() => [])));
-    const foods = rank(results.flat(), q);
-    if (foods.length) return foods;
-  } catch (err) {
-    console.error("search-a-licious failed", err);
-  }
-  // Fallback: the classic search endpoint (slower).
-  const data = await getJson<{ products?: OffProduct[] }>(
-    `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q)}&search_simple=1&json=1&page_size=100&lc=fr&cc=fr&fields=${FIELDS}`,
-  );
-  return rank((data.products ?? []).map(toFood).filter((f): f is Food => f !== null), q);
+  const results = await Promise.allSettled(variants.map(searchalicious));
+  const failed = results.filter((r) => r.status === "rejected");
+  failed.forEach((r) => console.error("search-a-licious failed", (r as PromiseRejectedResult).reason));
+  if (failed.length === results.length) throw new Error("search-a-licious unavailable");
+  return rank(results.flatMap((r) => (r.status === "fulfilled" ? r.value : [])), q);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
