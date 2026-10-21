@@ -11,7 +11,7 @@ const DAY_TYPES: { id: DayType; label: string }[] = [
   { id: "rest", label: "Jour de repos" },
 ];
 
-export function PlannerPage({ journal, profile, plan, setPlan, addEntries, rememberFood }: NutritionState) {
+export function PlannerPage({ journal, profile, plan, setPlan, addEntries, rememberFood, customFoods }: NutritionState) {
   const [scope, setScope] = useState<Scope>("day");
   const [logging, setLogging] = useState<number | null>(null);
   const [dayType, setDayType] = useState<DayType>("training");
@@ -93,6 +93,7 @@ export function PlannerPage({ journal, profile, plan, setPlan, addEntries, remem
           {logging === i ? (
             <MealToJournal
               meal={m}
+              customFoods={customFoods}
               onAdd={addEntries}
               onUseFood={rememberFood}
               onCancel={() => setLogging(null)}

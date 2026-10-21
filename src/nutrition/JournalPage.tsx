@@ -50,7 +50,18 @@ function SaveMeal({ entries, onSave }: { entries: JournalEntry[]; onSave: (name:
   );
 }
 
-export function JournalPage({ journal, addEntries, removeEntry, recentFoods, rememberFood, savedMeals, saveMeal, profile }: NutritionState) {
+export function JournalPage({
+  journal,
+  addEntries,
+  removeEntry,
+  recentFoods,
+  rememberFood,
+  customFoods,
+  addCustomFood,
+  savedMeals,
+  saveMeal,
+  profile,
+}: NutritionState) {
   const [slot, setSlot] = useState<MealSlot>(currentSlot);
   const [date, setDate] = useState(today);
   const isToday = date === today();
@@ -72,6 +83,8 @@ export function JournalPage({ journal, addEntries, removeEntry, recentFoods, rem
         <FoodPicker
           savedMeals={savedMeals}
           recentFoods={recentFoods}
+          customFoods={customFoods}
+          onCreateFood={addCustomFood}
           onUseFood={rememberFood}
           onAdd={(items) => addEntries(items.map((i) => ({ ...i, date, slot })))}
         />

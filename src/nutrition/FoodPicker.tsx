@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { findBarcode, normalize, scale, searchOff, SOURCE_LABEL, type Food } from "./foods";
+import { CreateFood } from "./CreateFood";
+import { findBarcode, matchFoods, normalize, scale, searchOff, SOURCE_LABEL, type Food } from "./foods";
 import type { JournalEntry, RecentFood, SavedMeal } from "./types";
 
 type NewEntry = Pick<JournalEntry, "description" | "nutrients" | "food">;
@@ -7,6 +8,8 @@ type NewEntry = Pick<JournalEntry, "description" | "nutrients" | "food">;
 interface Props {
   savedMeals: SavedMeal[];
   recentFoods: RecentFood[];
+  customFoods: Food[];
+  onCreateFood: (food: Omit<Food, "id" | "source">) => Food;
   onUseFood: (food: Food, grams: number) => void;
   onAdd: (entries: NewEntry[]) => void;
 }
@@ -74,7 +77,7 @@ function BarcodeScanner({ onCode, onClose }: { onCode: (code: string) => void; o
   );
 }
 
-export function FoodPicker({ savedMeals, recentFoods, onUseFood, onAdd }: Props) {
+export function FoodPicker({ savedMeals, recentFoods, customFoods, onCreateFood, onUseFood, onAdd }: Props) {
   const [query, setQuery] = useState("");
   const [off, setOff] = useState<Food[]>([]);
   const [searching, setSearching] = useState(false);
@@ -83,6 +86,8 @@ export function FoodPicker({ savedMeals, recentFoods, onUseFood, onAdd }: Props)
   const [scanning, setScanning] = useState(false);
   const [notFound, setNotFound] = useState("");
   const [searchError, setSearchError] = useState(false);
+  const [missingCode, setMissingCode] = useState("");
+  const [creating, setCreating] = useState<{ name?: string; barcode?: string } | null>(null);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -118,6 +123,7 @@ export function FoodPicker({ savedMeals, recentFoods, onUseFood, onAdd }: Props)
     .filter((r) => words.every((w) => normalize(r.food.name).includes(w)))
     .slice(0, query.trim() ? 5 : 8);
   const recentIds = new Set(recent.map((r) => r.food.id));
+  const mine = matchFoods(customFoods, query).filter((f) => !recentIds.has(f.id));
   const offResults = off.filter((f) => !recentIds.has(f.id));
 
   const pick = (food: Food, lastGrams?: number) => {
@@ -129,18 +135,40 @@ export function FoodPicker({ savedMeals, recentFoods, onUseFood, onAdd }: Props)
     setPicked(null);
     setQuery("");
     setNotFound("");
+    setMissingCode("");
   };
 
   const onCode = async (code: string) => {
     setScanning(false);
+    const own = customFoods.find((f) => f.barcode === code);
+    if (own) return pick(own);
     try {
       const food = await findBarcode(code);
       if (food) pick(food);
-      else setNotFound(`Aucun produit trouvé pour le code ${code}. Cherche-le par son nom.`);
+      else {
+        setNotFound(`Aucun produit trouvé pour le code ${code}.`);
+        setMissingCode(code);
+      }
     } catch {
       setNotFound("Open Food Facts ne répond pas. Réessaie dans un instant.");
     }
   };
+
+  if (creating) {
+    return (
+      <CreateFood
+        name={creating.name}
+        barcode={creating.barcode}
+        onCancel={() => setCreating(null)}
+        onCreate={(food) => {
+          setCreating(null);
+          setNotFound("");
+          setMissingCode("");
+          pick(onCreateFood(food));
+        }}
+      />
+    );
+  }
 
   if (picked) {
     const n = scale(picked.per100g, grams);
@@ -208,12 +236,20 @@ export function FoodPicker({ savedMeals, recentFoods, onUseFood, onAdd }: Props)
       </div>
       {scanning && <BarcodeScanner onCode={onCode} onClose={() => setScanning(false)} />}
       {notFound && <p className="error small">{notFound}</p>}
+      {missingCode && (
+        <button onClick={() => setCreating({ barcode: missingCode })}>Créer cet aliment avec son code-barres</button>
+      )}
 
       {recent.length > 0 && (
         <ResultGroup title={query.trim() ? "Déjà utilisés" : "Derniers aliments utilisés"}>
           {recent.map((r) => (
             <FoodResult key={r.food.id} food={r.food} grams={r.lastGrams} onPick={(f) => pick(f, r.lastGrams)} />
           ))}
+        </ResultGroup>
+      )}
+      {mine.length > 0 && (
+        <ResultGroup title="Mes aliments">
+          {mine.map((f) => <FoodResult key={f.id} food={f} onPick={(x) => pick(x)} />)}
         </ResultGroup>
       )}
       {meals.length > 0 && (
@@ -238,8 +274,13 @@ export function FoodPicker({ savedMeals, recentFoods, onUseFood, onAdd }: Props)
       {query.trim() && !searching && searchError && (
         <p className="error small">Open Food Facts ne répond pas. Réessaie dans un instant.</p>
       )}
-      {query.trim() && !searching && !searchError && !meals.length && !recent.length && !offResults.length && (
+      {query.trim() && !searching && !searchError && !meals.length && !recent.length && !mine.length && !offResults.length && (
         <p className="small muted">Rien trouvé pour « {query} ». Essaie un autre mot ou scanne le code-barres.</p>
+      )}
+      {query.trim() && !searching && (
+        <button className="link start" onClick={() => setCreating({ name: query.trim() })}>
+          Pas le bon aliment ? Créer « {query.trim()} »
+        </button>
       )}
     </div>
   );

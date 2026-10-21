@@ -4,8 +4,10 @@ import type { Nutrients } from "./types";
 export interface Food {
   id: string;
   name: string;
-  source: "off";
+  /** "custom": created by the user from the label, when Open Food Facts doesn't have it. */
+  source: "off" | "custom";
   brand?: string;
+  barcode?: string;
   per100g: Nutrients;
   /** Typical portion in grams, when the source gives one. */
   portionG?: number;
@@ -13,6 +15,13 @@ export interface Food {
 
 export const SOURCE_LABEL: Record<Food["source"], string> = {
   off: "Open Food Facts",
+  custom: "Mon aliment (valeurs de l'étiquette)",
+};
+
+/** Custom foods whose name contains every word of the query. */
+export const matchFoods = (foods: Food[], query: string) => {
+  const words = normalize(query).split(/\s+/).filter(Boolean);
+  return words.length ? foods.filter((f) => words.every((w) => normalize(f.name).includes(w))) : [];
 };
 
 /** Lowercase, no accents, "œ" as "oe", so "oeuf" finds "Œufs" and "pates" finds "Pâtes". */

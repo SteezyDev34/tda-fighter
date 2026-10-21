@@ -22,6 +22,7 @@ export function useNutrition() {
   const [plan, setPlan] = usePersisted<MealPlan | null>("plan", null);
   const [savedMeals, setSavedMeals] = usePersisted<SavedMeal[]>("saved-meals", []);
   const [recentFoods, setRecentFoods] = usePersisted<RecentFood[]>("recent-foods", []);
+  const [customFoods, setCustomFoods] = usePersisted<Food[]>("custom-foods", []);
 
   // Profiles saved before targets existed get the default targets.
   const profile = { ...EMPTY_PROFILE, ...storedProfile };
@@ -46,6 +47,12 @@ export function useNutrition() {
       ].slice(0, 50),
     );
 
+  const addCustomFood = (food: Omit<Food, "id" | "source">) => {
+    const created: Food = { ...food, id: `custom:${crypto.randomUUID()}`, source: "custom" };
+    setCustomFoods((f) => [created, ...f]);
+    return created;
+  };
+
   const removeEntry = (id: string) => setJournal((j) => j.filter((e) => e.id !== id));
 
   const saveMeal = (name: string, entries: JournalEntry[]) =>
@@ -66,6 +73,8 @@ export function useNutrition() {
     removeEntry,
     recentFoods,
     rememberFood,
+    customFoods,
+    addCustomFood,
     savedMeals,
     saveMeal,
     deleteMeal,

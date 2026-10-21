@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { today } from "../lib/storage";
-import { scale, searchOff, type Food } from "./foods";
+import { matchFoods, scale, searchOff, type Food } from "./foods";
 import { slotLabel, type JournalEntry, type SuggestedMeal } from "./types";
 
 interface Row {
@@ -14,6 +14,7 @@ interface Row {
 
 interface Props {
   meal: SuggestedMeal;
+  customFoods: Food[];
   onAdd: (entries: Omit<JournalEntry, "id" | "createdAt">[]) => void;
   onUseFood: (food: Food, grams: number) => void;
   onDone: () => void;
@@ -27,14 +28,18 @@ const fmt = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 0 
  * so the nutrients come from the database, never from the AI. The user checks the
  * product and the grams before adding.
  */
-export function MealToJournal({ meal, onAdd, onUseFood, onDone, onCancel }: Props) {
+export function MealToJournal({ meal, customFoods, onAdd, onUseFood, onDone, onCancel }: Props) {
   const [rows, setRows] = useState<Row[] | null>(null);
 
   useEffect(() => {
     let stale = false;
     Promise.all(
       meal.ingredients.map(async (ing) => {
-        const options = (await searchOff(ing.search ?? ing.item).catch(() => [])).slice(0, 6);
+        const query = ing.search ?? ing.item;
+        const options = [
+          ...matchFoods(customFoods, query),
+          ...(await searchOff(query).catch(() => [])),
+        ].slice(0, 6);
         return {
           item: ing.item,
           quantity: ing.quantity,
@@ -48,6 +53,8 @@ export function MealToJournal({ meal, onAdd, onUseFood, onDone, onCancel }: Prop
     return () => {
       stale = true;
     };
+    // customFoods only matter when the matching starts, not on later changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meal]);
 
   if (!rows) return <p className="small muted">Je cherche les aliments dans Open Food Facts…</p>;
