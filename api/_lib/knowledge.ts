@@ -39,6 +39,9 @@ export async function loadKnowledge(): Promise<string> {
   );
 
   const text = docs.join("\n\n");
-  cache = { at: Date.now(), text };
+  // An empty folder usually means it is not shared with the service account yet:
+  // don't cache that, so the resources show up as soon as the folder is shared.
+  if (text) cache = { at: Date.now(), text };
+  else console.warn("Drive : aucun fichier .md visible. Le dossier est-il partagé avec le compte de service ?");
   return text;
 }

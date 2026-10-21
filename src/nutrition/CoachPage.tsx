@@ -1,9 +1,27 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { recentJournal, type NutritionState } from "./useNutrition";
 
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
+}
+
+/** Shows the coach's Markdown bold and headings as bold text instead of raw "**" and "#". */
+function CoachText({ text }: { text: string }) {
+  return (
+    <>
+      {text.split("\n").map((line, i) => {
+        const heading = line.match(/^#{1,6}\s+(.*)$/);
+        const parts = (heading ? heading[1] : line).split(/\*\*(.+?)\*\*/g);
+        return (
+          <Fragment key={i}>
+            {i > 0 && "\n"}
+            {parts.map((p, j) => (j % 2 || heading ? <strong key={j}>{p}</strong> : p))}
+          </Fragment>
+        );
+      })}
+    </>
+  );
 }
 
 const SUGGESTIONS = [
@@ -61,7 +79,9 @@ export function CoachPage({ journal, profile }: NutritionState) {
       )}
       <div className="stack">
         {messages.map((m, i) => (
-          <div key={i} className={`bubble ${m.role}`}>{m.content || "…"}</div>
+          <div key={i} className={`bubble ${m.role}`}>
+            {m.content ? <CoachText text={m.content} /> : "…"}
+          </div>
         ))}
       </div>
       <form

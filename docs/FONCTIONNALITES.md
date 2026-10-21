@@ -37,6 +37,7 @@ Dernière mise à jour : 21/10/2026
 | Chat nutrition qui répond en direct (ex. « j'ai une fringale, qu'est-ce que je peux manger ? ») | 🧪 |
 | Réponses basées sur les ressources .md, mes critères et mon journal | 🧪 |
 | Questions suggérées pour démarrer | ✅ |
+| Mise en forme des réponses (gras et titres affichés proprement) | ✅ |
 | Ajouter un aliment au journal ou à la liste de courses depuis le chat | 📋 |
 
 ### Écran Critères
