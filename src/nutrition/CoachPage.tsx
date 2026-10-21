@@ -1,10 +1,25 @@
 import { Fragment, useState } from "react";
-import { recentJournal, type NutritionState } from "./useNutrition";
+import { recentJournal, usePersisted, type NutritionState } from "./useNutrition";
 
 interface ChatMessage {
   role: "user" | "assistant";
   content: string;
 }
+
+interface Conversation {
+  id: string;
+  title: string;
+  updatedAt: string;
+  messages: ChatMessage[];
+}
+
+/** Conversations kept on the device, newest first. */
+const MAX_CONVERSATIONS = 50;
+/** Only the end of a long conversation is sent to the coach. */
+const MAX_SENT_MESSAGES = 20;
+
+const when = (iso: string) =>
+  new Date(iso).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
 /** Shows the coach's Markdown bold and headings as bold text instead of raw "**" and "#". */
 function CoachText({ text }: { text: string }) {
@@ -31,21 +46,38 @@ const SUGGESTIONS = [
 ];
 
 export function CoachPage({ journal, profile }: NutritionState) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [conversations, setConversations] = usePersisted<Conversation[]>("coach-conversations", []);
+  const [currentId, setCurrentId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const current = conversations.find((c) => c.id === currentId);
+  const messages = current?.messages ?? [];
+
   const send = async (text: string) => {
     if (!text.trim() || busy) return;
+    const id = current?.id ?? crypto.randomUUID();
+    const title = current?.title ?? text.trim().slice(0, 60);
     const history: ChatMessage[] = [...messages, { role: "user", content: text.trim() }];
+    // Saves the conversation at the top of the history on every streamed chunk.
+    const setMessages = (msgs: ChatMessage[]) =>
+      setConversations((all) =>
+        [{ id, title, updatedAt: new Date().toISOString(), messages: msgs }, ...all.filter((c) => c.id !== id)].slice(
+          0,
+          MAX_CONVERSATIONS,
+        ),
+      );
+    setCurrentId(id);
     setMessages([...history, { role: "assistant", content: "" }]);
     setInput("");
     setBusy(true);
+    let sent = history.slice(-MAX_SENT_MESSAGES);
+    if (sent[0]?.role === "assistant") sent = sent.slice(1);
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history, profile, journal: recentJournal(journal) }),
+        body: JSON.stringify({ messages: sent, profile, journal: recentJournal(journal) }),
       });
       if (!res.ok || !res.body) throw new Error(await res.text());
       const reader = res.body.getReader();
@@ -69,11 +101,38 @@ export function CoachPage({ journal, profile }: NutritionState) {
 
   return (
     <section className="stack">
-      <h1>Coach nutrition</h1>
-      {messages.length === 0 && (
+      <div className="row between">
+        <h1>Coach nutrition</h1>
+        {current && (
+          <button onClick={() => setCurrentId(null)} disabled={busy}>Nouvelle conversation</button>
+        )}
+      </div>
+      {!current && (
         <div className="stack">
           {SUGGESTIONS.map((s) => (
             <button key={s} className="suggestion" onClick={() => send(s)}>{s}</button>
+          ))}
+        </div>
+      )}
+      {!current && conversations.length > 0 && (
+        <div className="stack tight">
+          <span className="label">Conversations précédentes</span>
+          {conversations.map((c) => (
+            <div key={c.id} className="row">
+              <button className="result" onClick={() => setCurrentId(c.id)}>
+                <span>{c.title}</span>
+                <span className="small muted">
+                  {when(c.updatedAt)} · {c.messages.length} message{c.messages.length > 1 ? "s" : ""}
+                </span>
+              </button>
+              <button
+                className="link"
+                aria-label={`Supprimer la conversation ${c.title}`}
+                onClick={() => setConversations((all) => all.filter((x) => x.id !== c.id))}
+              >
+                Supprimer
+              </button>
+            </div>
           ))}
         </div>
       )}

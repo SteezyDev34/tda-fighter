@@ -41,6 +41,7 @@ Dernière mise à jour : 21/10/2026
 | Réponses basées sur les ressources .md, mes critères et mon journal | 🧪 |
 | Questions suggérées pour démarrer | ✅ |
 | Mise en forme des réponses (gras et titres affichés proprement) | ✅ |
+| Historique des conversations : les reprendre plus tard, en démarrer une nouvelle, en supprimer | ✅ |
 | Ajouter un aliment au journal ou à la liste de courses depuis le chat | 📋 |
 
 ### Écran Critères

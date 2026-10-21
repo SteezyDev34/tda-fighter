@@ -10,7 +10,7 @@ import {
   type SavedMeal,
 } from "./types";
 
-function usePersisted<T>(key: string, fallback: T) {
+export function usePersisted<T>(key: string, fallback: T) {
   const [value, setValue] = useState<T>(() => load(key, fallback));
   useEffect(() => save(key, value), [key, value]);
   return [value, setValue] as const;
