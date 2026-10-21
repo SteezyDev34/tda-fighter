@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { normalize, type Food } from "../src/nutrition/foods";
+import type { Food } from "../src/nutrition/foods";
+import { normalize } from "./_lib/shared.js";
 
 /**
  * Food search and barcode lookup in Open Food Facts.

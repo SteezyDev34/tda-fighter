@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { buildSystem, client, MODEL } from "./_lib/claude";
+import { buildSystem, client, MODEL } from "./_lib/claude.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).send("POST uniquement");

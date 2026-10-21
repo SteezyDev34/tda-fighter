@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { JournalEntry, NutritionProfile } from "../../src/nutrition/types";
-import { slotLabel } from "../../src/nutrition/types";
-import { loadKnowledge } from "./knowledge";
+import { loadKnowledge } from "./knowledge.js";
+import { slotLabel } from "./shared.js";
 
 export const client = new Anthropic();
 export const MODEL = "claude-opus-5-5";

@@ -1,15 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { MEAL_SLOTS, slotLabel, type MealSlot } from "../src/nutrition/types";
-import { buildSystem, client, MODEL } from "./_lib/claude";
-
-const slotIds = MEAL_SLOTS.map((s) => s.id) as [MealSlot, ...MealSlot[]];
+import type { MealSlot } from "../src/nutrition/types";
+import { buildSystem, client, MODEL } from "./_lib/claude.js";
+import { MEAL_SLOT_IDS, slotLabel } from "./_lib/shared.js";
 
 const PlanSchema = z.object({
   meals: z.array(
     z.object({
-      slot: z.enum(slotIds),
+      slot: z.enum(MEAL_SLOT_IDS),
       name: z.string(),
       ingredients: z.array(z.object({ item: z.string(), quantity: z.string() })),
       steps: z.array(z.string()),
