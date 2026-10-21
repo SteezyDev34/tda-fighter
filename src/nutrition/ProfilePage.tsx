@@ -4,6 +4,11 @@ import type { NutritionState } from "./useNutrition";
 type TextField = Exclude<keyof NutritionProfile, "targets">;
 
 const FIELDS: { key: TextField; label: string; placeholder: string }[] = [
+  {
+    key: "body",
+    label: "Moi",
+    placeholder: "Ex. : homme, 34 ans, 85 kg, 182 cm, sport 3 fois par semaine, protocole perte de poids",
+  },
   { key: "goal", label: "Mon objectif", placeholder: "Ex. : plus d'énergie, perdre 3 kg, prendre du muscle" },
   { key: "likes", label: "J'aime", placeholder: "Ex. : poulet, riz, avocat, chocolat noir" },
   { key: "dislikes", label: "Je n'aime pas", placeholder: "Ex. : poisson, champignons" },

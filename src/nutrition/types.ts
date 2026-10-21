@@ -56,6 +56,8 @@ export interface SavedMeal {
 
 /** The criteria the AI must respect when it suggests meals. */
 export interface NutritionProfile {
+  /** Sex, age, weight, height, activity, followed protocol: used to compute needs and apports. */
+  body: string;
   goal: string;
   likes: string;
   dislikes: string;
@@ -70,6 +72,8 @@ export interface SuggestedMeal {
   slot: MealSlot;
   name: string;
   ingredients: { item: string; quantity: string }[];
+  /** Apports of the meal in the resources' method, e.g. "2 TP + 1 BH + 1 MM + BG". */
+  apports?: string;
   steps: string[];
   why: string;
 }
@@ -87,6 +91,7 @@ export interface MealPlan {
 }
 
 export const EMPTY_PROFILE: NutritionProfile = {
+  body: "",
   goal: "",
   likes: "",
   dislikes: "",

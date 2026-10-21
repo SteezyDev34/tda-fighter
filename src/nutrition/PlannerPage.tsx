@@ -61,6 +61,7 @@ export function PlannerPage({ journal, profile, plan, setPlan }: NutritionState)
         <article key={i} className="card stack">
           <span className="label">{slotLabel(m.slot)}</span>
           <h2>{m.name}</h2>
+          {m.apports && <span className="pill ok">{m.apports}</span>}
           <p className="muted">{m.why}</p>
           <ul>
             {m.ingredients.map((ing, k) => (

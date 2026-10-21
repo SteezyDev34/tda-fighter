@@ -26,6 +26,7 @@ Dernière mise à jour : 21/10/2026
 |---|---|
 | Générer un repas ou une journée complète (5 repas) à partir du journal, des critères et des ressources | 🧪 |
 | Recette simple et explication de pourquoi le repas me convient | 🧪 |
+| Repas composés selon la méthode des apports (TP, BH, MM, E, BG) et les quantités de « 1 apport » des ressources, apports affichés sur chaque repas | 🧪 |
 | Liste de courses générée depuis les repas, regroupée par rayon, cochable | 🧪 |
 | Noter un repas suggéré dans le journal en un tap, avec les aliments de la base | 📋 |
 | Remplacer un plat en un tap | 📋 |
@@ -44,6 +45,8 @@ Dernière mise à jour : 21/10/2026
 | Fonctionnalité | Statut |
 |---|---|
 | Objectif, aliments aimés et évités, allergies, budget, temps pour cuisiner | ✅ |
+| Champ « Moi » (sexe, âge, poids, taille, activité, protocole) pour calculer mes besoins et mon profil d'apports | ✅ |
+| Calcul automatique de mes besoins et de mes apports par catégorie, avec la grille de la semaine | 📋 |
 | Objectifs journaliers (calories, protéines, glucides, lipides) utilisés par le graphique | ✅ |
 
 ### Bilan (écran à venir)

@@ -11,6 +11,7 @@ const PlanSchema = z.object({
       slot: z.enum(MEAL_SLOT_IDS),
       name: z.string(),
       ingredients: z.array(z.object({ item: z.string(), quantity: z.string() })),
+      apports: z.string(),
       steps: z.array(z.string()),
       why: z.string(),
     }),
@@ -36,7 +37,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         {
           role: "user",
           content: `Propose un repas pour : ${slots.map(slotLabel).join(", ")}.
-Varie par rapport à ce que j'ai mangé ces derniers jours, respecte mes critères et les ressources.
+Suis la méthode des ressources :
+- calcule mes besoins et mon profil (métabolisme basal × facteur d'activité) avec mes critères « moi » ; s'ils manquent, prends mes objectifs journaliers en kcal ;
+- applique le protocole que je suis (perte de poids par défaut) pour savoir combien d'apports TP, BH, MM et E je dois avoir sur la journée, et répartis-les entre les repas demandés ;
+- choisis les aliments dans les listes de courses des ressources et donne les quantités exactes de « 1 apport » (version homme ou femme selon mon sexe) ;
+- ajoute les aliments brûle graisses imposés au déjeuner et au dîner, et les fruits ou crudités du mois en cours pour les apports E.
+Dans "apports", écris les apports du repas, par exemple « 2 TP + 1 BH + 1 MM + BG ».
+Varie par rapport à ce que j'ai mangé ces derniers jours et respecte mes goûts, allergies, budget et temps.
 Recettes simples, 5 étapes max. Dans "why", explique en une phrase pourquoi ce repas me convient.
 Puis fais la liste de courses de tous ces repas : quantités additionnées, regroupées par rayon.`,
         },

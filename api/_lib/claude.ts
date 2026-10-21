@@ -12,12 +12,22 @@ Appuie-toi d'abord sur les ressources nutritionnelles fournies (balises <documen
 Si les ressources ne couvrent pas la question, dis-le et donne un conseil prudent et général.
 Tu ne poses pas de diagnostic médical ; en cas de doute de santé, oriente vers un professionnel.`;
 
+const CRITERIA_LABELS: Record<string, string> = {
+  body: "moi (sexe, âge, poids, taille, activité, protocole)",
+  goal: "objectif",
+  likes: "j'aime",
+  dislikes: "je n'aime pas",
+  allergies: "allergies ou intolérances",
+  budget: "budget",
+  cookingTime: "temps pour cuisiner",
+};
+
 function describeContext(profile: NutritionProfile, journal: JournalEntry[]) {
   const { targets, ...text } = profile;
   const criteria = [
     ...Object.entries(text)
-      .filter(([, v]) => v.trim())
-      .map(([k, v]) => `- ${k} : ${v}`),
+      .filter(([, v]) => typeof v === "string" && v.trim())
+      .map(([k, v]) => `- ${CRITERIA_LABELS[k] ?? k} : ${v}`),
     ...(targets
       ? [`- objectifs journaliers : ${targets.kcal} kcal, ${targets.protein} g protéines, ${targets.carbs} g glucides, ${targets.fat} g lipides`]
       : []),
