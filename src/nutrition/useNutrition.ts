@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { load, save } from "../lib/storage";
+import type { Food } from "./foods";
 import {
   EMPTY_PROFILE,
   type JournalEntry,
   type MealPlan,
   type NutritionProfile,
+  type RecentFood,
   type SavedMeal,
 } from "./types";
 
@@ -19,6 +21,7 @@ export function useNutrition() {
   const [storedProfile, setProfile] = usePersisted<NutritionProfile>("profile", EMPTY_PROFILE);
   const [plan, setPlan] = usePersisted<MealPlan | null>("plan", null);
   const [savedMeals, setSavedMeals] = usePersisted<SavedMeal[]>("saved-meals", []);
+  const [recentFoods, setRecentFoods] = usePersisted<RecentFood[]>("recent-foods", []);
 
   // Profiles saved before targets existed get the default targets.
   const profile = { ...EMPTY_PROFILE, ...storedProfile };
@@ -33,6 +36,15 @@ export function useNutrition() {
       ...entries.map((e) => ({ ...e, id: crypto.randomUUID(), createdAt: new Date().toISOString() })),
       ...j,
     ]);
+
+  /** The last food used goes to the top of the list, with its quantity. */
+  const rememberFood = (food: Food, grams: number) =>
+    setRecentFoods((r) =>
+      [
+        { food, lastGrams: grams, usedAt: new Date().toISOString() },
+        ...r.filter((x) => x.food.id !== food.id),
+      ].slice(0, 50),
+    );
 
   const removeEntry = (id: string) => setJournal((j) => j.filter((e) => e.id !== id));
 
@@ -52,6 +64,8 @@ export function useNutrition() {
     journal,
     addEntries,
     removeEntry,
+    recentFoods,
+    rememberFood,
     savedMeals,
     saveMeal,
     deleteMeal,

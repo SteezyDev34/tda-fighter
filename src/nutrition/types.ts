@@ -1,3 +1,5 @@
+import type { Food } from "./foods";
+
 export const MEAL_SLOTS = [
   { id: "breakfast", label: "Petit-déjeuner" },
   { id: "morning_snack", label: "Collation du matin" },
@@ -36,6 +38,13 @@ export interface JournalEntry {
   nutrients: Nutrients;
   /** The database food this line comes from. */
   food?: { id: string; grams: number };
+}
+
+/** A food the user already logged, kept to find it again first. */
+export interface RecentFood {
+  food: Food;
+  lastGrams: number;
+  usedAt: string;
 }
 
 /** A meal the user saved to log it again in one tap. */

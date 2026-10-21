@@ -49,7 +49,7 @@ function SaveMeal({ entries, onSave }: { entries: JournalEntry[]; onSave: (name:
   );
 }
 
-export function JournalPage({ journal, addEntries, removeEntry, savedMeals, saveMeal, profile }: NutritionState) {
+export function JournalPage({ journal, addEntries, removeEntry, recentFoods, rememberFood, savedMeals, saveMeal, profile }: NutritionState) {
   const [slot, setSlot] = useState<MealSlot>(currentSlot);
   const date = today();
   const todays = journal.filter((e) => e.date === date);
@@ -68,6 +68,8 @@ export function JournalPage({ journal, addEntries, removeEntry, savedMeals, save
         </select>
         <FoodPicker
           savedMeals={savedMeals}
+          recentFoods={recentFoods}
+          onUseFood={rememberFood}
           onAdd={(items) => addEntries(items.map((i) => ({ ...i, date, slot })))}
         />
       </div>

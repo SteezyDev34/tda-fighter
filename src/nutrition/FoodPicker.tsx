@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { findBarcode, normalize, scale, searchOff, SOURCE_LABEL, type Food } from "./foods";
-import type { JournalEntry, SavedMeal } from "./types";
+import type { JournalEntry, RecentFood, SavedMeal } from "./types";
 
 type NewEntry = Pick<JournalEntry, "description" | "nutrients" | "food">;
 
 interface Props {
   savedMeals: SavedMeal[];
+  recentFoods: RecentFood[];
+  onUseFood: (food: Food, grams: number) => void;
   onAdd: (entries: NewEntry[]) => void;
 }
 
@@ -72,7 +74,7 @@ function BarcodeScanner({ onCode, onClose }: { onCode: (code: string) => void; o
   );
 }
 
-export function FoodPicker({ savedMeals, onAdd }: Props) {
+export function FoodPicker({ savedMeals, recentFoods, onUseFood, onAdd }: Props) {
   const [query, setQuery] = useState("");
   const [off, setOff] = useState<Food[]>([]);
   const [searching, setSearching] = useState(false);
@@ -110,9 +112,17 @@ export function FoodPicker({ savedMeals, onAdd }: Props) {
     ? savedMeals.filter((m) => normalize(m.name).includes(normalize(query)))
     : [];
 
-  const pick = (food: Food) => {
+  // Without a search: the last foods used. With one: the matching ones, before Open Food Facts.
+  const words = normalize(query).split(/\s+/).filter(Boolean);
+  const recent = recentFoods
+    .filter((r) => words.every((w) => normalize(r.food.name).includes(w)))
+    .slice(0, query.trim() ? 5 : 8);
+  const recentIds = new Set(recent.map((r) => r.food.id));
+  const offResults = off.filter((f) => !recentIds.has(f.id));
+
+  const pick = (food: Food, lastGrams?: number) => {
     setPicked(food);
-    setGrams(food.portionG ?? 100);
+    setGrams(lastGrams ?? food.portionG ?? 100);
   };
 
   const reset = () => {
@@ -166,6 +176,7 @@ export function FoodPicker({ savedMeals, onAdd }: Props) {
             disabled={!grams}
             onClick={() => {
               onAdd([{ description: `${picked.name} (${grams} g)`, nutrients: n, food: { id: picked.id, grams } }]);
+              onUseFood(picked, grams);
               reset();
             }}
           >
@@ -198,6 +209,13 @@ export function FoodPicker({ savedMeals, onAdd }: Props) {
       {scanning && <BarcodeScanner onCode={onCode} onClose={() => setScanning(false)} />}
       {notFound && <p className="error small">{notFound}</p>}
 
+      {recent.length > 0 && (
+        <ResultGroup title={query.trim() ? "Déjà utilisés" : "Derniers aliments utilisés"}>
+          {recent.map((r) => (
+            <FoodResult key={r.food.id} food={r.food} grams={r.lastGrams} onPick={(f) => pick(f, r.lastGrams)} />
+          ))}
+        </ResultGroup>
+      )}
       {meals.length > 0 && (
         <ResultGroup title="Mes repas">
           {meals.map((m) => (
@@ -211,16 +229,16 @@ export function FoodPicker({ savedMeals, onAdd }: Props) {
           ))}
         </ResultGroup>
       )}
-      {off.length > 0 && (
+      {offResults.length > 0 && (
         <ResultGroup title="Aliments et produits (Open Food Facts)">
-          {off.map((f) => <FoodResult key={f.id} food={f} onPick={pick} />)}
+          {offResults.map((f) => <FoodResult key={f.id} food={f} onPick={(x) => pick(x)} />)}
         </ResultGroup>
       )}
       {query.trim() && searching && <p className="small muted">Recherche dans Open Food Facts…</p>}
       {query.trim() && !searching && searchError && (
         <p className="error small">Open Food Facts ne répond pas. Réessaie dans un instant.</p>
       )}
-      {query.trim() && !searching && !searchError && !meals.length && !off.length && (
+      {query.trim() && !searching && !searchError && !meals.length && !recent.length && !offResults.length && (
         <p className="small muted">Rien trouvé pour « {query} ». Essaie un autre mot ou scanne le code-barres.</p>
       )}
     </div>
@@ -236,14 +254,16 @@ function ResultGroup({ title, children }: { title: string; children: React.React
   );
 }
 
-function FoodResult({ food, onPick }: { food: Food; onPick: (f: Food) => void }) {
+function FoodResult({ food, grams, onPick }: { food: Food; grams?: number; onPick: (f: Food) => void }) {
   return (
     <button className="result" onClick={() => onPick(food)}>
       <span>
         {food.name}
         {food.brand && <span className="muted"> · {food.brand}</span>}
       </span>
-      <span className="small muted">{fmt(food.per100g.kcal)} kcal / 100 g</span>
+      <span className="small muted">
+        {fmt(food.per100g.kcal)} kcal / 100 g{grams ? ` · dernière fois ${grams} g` : ""}
+      </span>
     </button>
   );
 }

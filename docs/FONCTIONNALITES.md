@@ -3,7 +3,7 @@
 Mis à jour à chaque nouvelle fonctionnalité demandée.
 Statuts : ✅ codé · 🧪 codé, IA à brancher · 🎨 prototype seulement · 📋 prévu
 
-Dernière mise à jour : 20/10/2026
+Dernière mise à jour : 21/10/2026
 
 ## Nutrition
 
@@ -15,6 +15,7 @@ Dernière mise à jour : 20/10/2026
 | Barre de recherche d'aliments et de produits dans Open Food Facts, sans IA : les apports viennent directement de la base | ✅ |
 | Scan du code-barres (caméra sur Android/Chrome, sinon saisie du code) | ✅ |
 | Choix de la quantité en grammes (raccourcis 50, 100, 150, 200 g ou portion du produit) avec aperçu des apports | ✅ |
+| Aliments déjà utilisés en tête de liste, le dernier en premier, avec la dernière quantité | ✅ |
 | Enregistrer un repas (plusieurs aliments) sous un nom et le retrouver dans la recherche « Mes repas » | ✅ |
 | Graphique des apports du jour comparés aux objectifs, mis à jour à chaque aliment noté | ✅ |
 | Détail par repas au survol ou au tap sur une barre du graphique | ✅ |
