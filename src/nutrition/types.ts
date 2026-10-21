@@ -71,7 +71,10 @@ export interface NutritionProfile {
 export interface SuggestedMeal {
   slot: MealSlot;
   name: string;
-  ingredients: { item: string; quantity: string }[];
+  /** grams and search let the meal be logged with Open Food Facts nutrients. */
+  ingredients: { item: string; quantity: string; grams?: number; search?: string }[];
+  /** Set once the meal has been added to the journal. */
+  logged?: boolean;
   /** Apports of the meal in the resources' method, e.g. "2 TP + 1 BH + 1 MM + BG". */
   apports?: string;
   steps: string[];

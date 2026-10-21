@@ -102,3 +102,6 @@ button.link { background: none; padding: 4px; color: var(--accent); font-size: 0
 }
 .agenda-day[aria-pressed="true"] { border-color: var(--accent); }
 .agenda-day:disabled { opacity: 0.4; }
+.grams { width: 84px; flex: none; }
+input[type="checkbox"] { width: auto; flex: none; }
+.pill.start { align-self: flex-start; }

@@ -1,11 +1,13 @@
 import { useState } from "react";
+import { MealToJournal } from "./MealToJournal";
 import { MEAL_SLOTS, slotLabel, type MealPlan, type MealSlot } from "./types";
 import { recentJournal, type NutritionState } from "./useNutrition";
 
 type Scope = "day" | MealSlot;
 
-export function PlannerPage({ journal, profile, plan, setPlan }: NutritionState) {
+export function PlannerPage({ journal, profile, plan, setPlan, addEntries, rememberFood }: NutritionState) {
   const [scope, setScope] = useState<Scope>("day");
+  const [logging, setLogging] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,6 +26,7 @@ export function PlannerPage({ journal, profile, plan, setPlan }: NutritionState)
       });
       if (!res.ok) throw new Error(await res.text());
       setPlan((await res.json()) as MealPlan);
+      setLogging(null);
     } catch (e) {
       setError(`La génération a échoué. Réessaie dans un instant. (${(e as Error).message})`);
     } finally {
@@ -61,7 +64,7 @@ export function PlannerPage({ journal, profile, plan, setPlan }: NutritionState)
         <article key={i} className="card stack">
           <span className="label">{slotLabel(m.slot)}</span>
           <h2>{m.name}</h2>
-          {m.apports && <span className="pill ok">{m.apports}</span>}
+          {m.apports && <span className="pill ok start">{m.apports}</span>}
           <p className="muted">{m.why}</p>
           <ul>
             {m.ingredients.map((ing, k) => (
@@ -71,6 +74,22 @@ export function PlannerPage({ journal, profile, plan, setPlan }: NutritionState)
           <ol>
             {m.steps.map((s, k) => <li key={k}>{s}</li>)}
           </ol>
+          {logging === i ? (
+            <MealToJournal
+              meal={m}
+              onAdd={addEntries}
+              onUseFood={rememberFood}
+              onCancel={() => setLogging(null)}
+              onDone={() => {
+                setLogging(null);
+                setPlan({ ...plan, meals: plan.meals.map((x, j) => (j === i ? { ...x, logged: true } : x)) });
+              }}
+            />
+          ) : m.logged ? (
+            <span className="pill ok start">Ajouté au journal ✓</span>
+          ) : (
+            <button className="primary" onClick={() => setLogging(i)}>Ajouter au journal</button>
+          )}
         </article>
       ))}
 
