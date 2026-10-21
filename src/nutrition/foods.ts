@@ -26,57 +26,18 @@ export const scale = (per100g: Nutrients, grams: number): Nutrients => ({
   fat: Math.round((per100g.fat * grams) / 10) / 10,
 });
 
-// --- Open Food Facts: packaged products, by name or barcode ---
+// --- Open Food Facts, through the app's own /api/food route (no CORS, proper User-Agent) ---
 
-interface OffProduct {
-  code: string;
-  product_name?: string;
-  brands?: string;
-  serving_quantity?: number | string;
-  nutriments?: Record<string, number | string | undefined>;
-}
-
-const OFF = "https://world.openfoodfacts.org";
-const OFF_FIELDS = "code,product_name,brands,serving_quantity,nutriments";
-
-function fromOff(p: OffProduct): Food | null {
-  const n = p.nutriments ?? {};
-  const num = (k: string) => Number(n[k] ?? 0) || 0;
-  const kcal = num("energy-kcal_100g") || num("energy_100g") / 4.184;
-  if (!p.product_name || !kcal) return null;
-  const portion = Number(p.serving_quantity);
-  return {
-    id: `off:${p.code}`,
-    name: p.product_name,
-    brand: p.brands?.split(",")[0]?.trim(),
-    source: "off",
-    per100g: {
-      kcal: Math.round(kcal),
-      protein: num("proteins_100g"),
-      carbs: num("carbohydrates_100g"),
-      fat: num("fat_100g"),
-    },
-    portionG: portion > 0 ? portion : undefined,
-  };
-}
-
-export async function searchOff(query: string, limit = 20): Promise<Food[]> {
-  if (normalize(query).length < 3) return [];
-  try {
-    const url = `${OFF}/cgi/search.pl?search_terms=${encodeURIComponent(query)}&search_simple=1&json=1&page_size=${limit}&fields=${OFF_FIELDS}&lc=fr&cc=fr`;
-    const data = (await (await fetch(url)).json()) as { products?: OffProduct[] };
-    return (data.products ?? []).map(fromOff).filter((f): f is Food => f !== null);
-  } catch {
-    return [];
-  }
+export async function searchOff(query: string): Promise<Food[]> {
+  if (normalize(query).length < 2) return [];
+  const res = await fetch(`/api/food?q=${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error(await res.text());
+  return (await res.json()) as Food[];
 }
 
 export async function findBarcode(code: string): Promise<Food | null> {
-  try {
-    const res = await fetch(`${OFF}/api/v2/product/${encodeURIComponent(code)}.json?fields=${OFF_FIELDS}`);
-    const data = (await res.json()) as { status?: number; product?: OffProduct };
-    return data.status === 1 && data.product ? fromOff({ ...data.product, code }) : null;
-  } catch {
-    return null;
-  }
+  const res = await fetch(`/api/food?code=${encodeURIComponent(code)}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(await res.text());
+  return (await res.json()) as Food;
 }

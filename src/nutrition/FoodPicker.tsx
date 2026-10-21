@@ -80,6 +80,7 @@ export function FoodPicker({ savedMeals, onAdd }: Props) {
   const [grams, setGrams] = useState(100);
   const [scanning, setScanning] = useState(false);
   const [notFound, setNotFound] = useState("");
+  const [searchError, setSearchError] = useState(false);
 
   useEffect(() => {
     if (!query.trim()) {
@@ -88,12 +89,16 @@ export function FoodPicker({ savedMeals, onAdd }: Props) {
     }
     let stale = false;
     setSearching(true);
+    setSearchError(false);
     const t = setTimeout(() => {
-      searchOff(query).then((r) => {
-        if (stale) return;
-        setOff(r);
-        setSearching(false);
-      });
+      searchOff(query)
+        .then((r) => !stale && setOff(r))
+        .catch(() => {
+          if (stale) return;
+          setOff([]);
+          setSearchError(true);
+        })
+        .finally(() => !stale && setSearching(false));
     }, 400);
     return () => {
       stale = true;
@@ -118,9 +123,13 @@ export function FoodPicker({ savedMeals, onAdd }: Props) {
 
   const onCode = async (code: string) => {
     setScanning(false);
-    const food = await findBarcode(code);
-    if (food) pick(food);
-    else setNotFound(`Aucun produit trouvé pour le code ${code}. Cherche-le par son nom.`);
+    try {
+      const food = await findBarcode(code);
+      if (food) pick(food);
+      else setNotFound(`Aucun produit trouvé pour le code ${code}. Cherche-le par son nom.`);
+    } catch {
+      setNotFound("Open Food Facts ne répond pas. Réessaie dans un instant.");
+    }
   };
 
   if (picked) {
@@ -208,8 +217,11 @@ export function FoodPicker({ savedMeals, onAdd }: Props) {
         </ResultGroup>
       )}
       {query.trim() && searching && <p className="small muted">Recherche dans Open Food Facts…</p>}
-      {query.trim() && !searching && !meals.length && !off.length && (
-        <p className="small muted">Rien trouvé pour « {query} ». Essaie un mot plus simple, par exemple « riz » ou « yaourt ».</p>
+      {query.trim() && !searching && searchError && (
+        <p className="error small">Open Food Facts ne répond pas. Réessaie dans un instant.</p>
+      )}
+      {query.trim() && !searching && !searchError && !meals.length && !off.length && (
+        <p className="small muted">Rien trouvé pour « {query} ». Essaie un autre mot ou scanne le code-barres.</p>
       )}
     </div>
   );
