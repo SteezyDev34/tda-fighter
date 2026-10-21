@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { today } from "../lib/storage";
 import { DailyIntake } from "./DailyIntake";
+import { JournalAgenda } from "./JournalAgenda";
 import { FoodPicker } from "./FoodPicker";
 import { MEAL_SLOTS, type JournalEntry, type MealSlot } from "./types";
 import type { NutritionState } from "./useNutrition";
@@ -51,12 +52,14 @@ function SaveMeal({ entries, onSave }: { entries: JournalEntry[]; onSave: (name:
 
 export function JournalPage({ journal, addEntries, removeEntry, recentFoods, rememberFood, savedMeals, saveMeal, profile }: NutritionState) {
   const [slot, setSlot] = useState<MealSlot>(currentSlot);
-  const date = today();
+  const [date, setDate] = useState(today);
+  const isToday = date === today();
   const todays = journal.filter((e) => e.date === date);
 
   return (
     <section className="stack">
-      <h1>Journal du jour</h1>
+      <h1>{isToday ? "Journal du jour" : "Journal"}</h1>
+      <JournalAgenda date={date} journal={journal} onChange={setDate} />
       <DailyIntake entries={todays} targets={profile.targets} />
 
       <div className="card stack">

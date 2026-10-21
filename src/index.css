@@ -92,3 +92,13 @@ button.link { background: none; padding: 4px; color: var(--accent); font-size: 0
 .chip { padding: 10px 12px; flex: none; }
 .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
 .scanner-video { width: 100%; max-width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; background: var(--line); }
+
+.agenda-title { text-align: center; }
+.agenda-title::first-letter { text-transform: uppercase; }
+.agenda-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.agenda-day {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0;
+  background: var(--surface); border: 2px solid var(--line); border-radius: 12px; min-width: 0;
+}
+.agenda-day[aria-pressed="true"] { border-color: var(--accent); }
+.agenda-day:disabled { opacity: 0.4; }

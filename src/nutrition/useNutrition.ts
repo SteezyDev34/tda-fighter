@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { load, save } from "../lib/storage";
+import { load, save, shiftDate, today } from "../lib/storage";
 import type { Food } from "./foods";
 import {
   EMPTY_PROFILE,
@@ -80,6 +80,6 @@ export type NutritionState = ReturnType<typeof useNutrition>;
 
 /** The last 14 days of the journal, sent to the AI as context. */
 export function recentJournal(journal: JournalEntry[], days = 14) {
-  const since = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+  const since = shiftDate(today(), -days);
   return journal.filter((e) => e.date >= since);
 }

@@ -19,6 +19,8 @@ Dernière mise à jour : 21/10/2026
 | Enregistrer un repas (plusieurs aliments) sous un nom et le retrouver dans la recherche « Mes repas » | ✅ |
 | Graphique des apports du jour comparés aux objectifs, mis à jour à chaque aliment noté | ✅ |
 | Détail par repas au survol ou au tap sur une barre du graphique | ✅ |
+| Agenda : revoir l'historique jour par jour (semaine, flèches, choix d'une date), avec les calories de chaque jour | ✅ |
+| Noter un aliment oublié sur un jour passé | ✅ |
 | Rappel doux si un repas n'est pas noté | 📋 |
 
 ### Écran Repas et courses
