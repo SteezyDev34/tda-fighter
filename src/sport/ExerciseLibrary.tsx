@@ -65,9 +65,11 @@ interface Props {
   onPick?: (ex: Exercise) => void;
   /** Adds an exercise the library doesn't have, under the typed name. */
   onPickCustom?: (name: string) => void;
+  /** Exercises already done, the most recent first: shown at the top. */
+  recent?: string[];
 }
 
-export function ExerciseLibrary({ onPick, onPickCustom }: Props) {
+export function ExerciseLibrary({ onPick, onPickCustom, recent = [] }: Props) {
   const [all, setAll] = useState<Exercise[] | null>(null);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
@@ -83,7 +85,11 @@ export function ExerciseLibrary({ onPick, onPickCustom }: Props) {
   if (!all) return <p className="muted">Chargement des exercices…</p>;
   if (open) return <ExerciseDetail ex={open} onBack={() => setOpen(null)} onPick={onPick} />;
 
-  const results = filterExercises(all, query, group);
+  const rank = (id: string) => {
+    const i = recent.indexOf(id);
+    return i === -1 ? Infinity : i;
+  };
+  const results = filterExercises(all, query, group).sort((a, b) => rank(a.id) - rank(b.id));
 
   return (
     <div className="stack">
@@ -119,7 +125,10 @@ export function ExerciseLibrary({ onPick, onPickCustom }: Props) {
           <button key={ex.id} className="ex-row" onClick={() => setOpen(ex)}>
             <Thumb id={ex.id} />
             <span className="stack tight">
-              <strong>{ex.fr}</strong>
+              <strong>
+                {ex.fr}
+                {recent.includes(ex.id) && <span className="pill recent">Déjà fait</span>}
+              </strong>
               <span className="small muted">
                 {musclesLabel(ex)} · {EQUIPMENT[ex.e] ?? ex.e}
               </span>

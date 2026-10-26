@@ -88,6 +88,7 @@ Section présente dans le menu, avec la liste de ce qui arrive.
 | Autre activité sportive (foot, boxe, yoga…) : durée, intensité, notes | ✅ |
 | Bibliothèque de 876 exercices en français avec images départ/arrivée (Free Exercise DB, domaine public), recherche et filtre par muscle | ✅ |
 | Ajout d'un exercice absent de la bibliothèque | ✅ |
+| Exercices déjà faits en haut de la liste (le plus récent d'abord), marqués « Déjà fait » | ✅ |
 | Repas adaptés automatiquement aux séances enregistrées (jour d'entraînement, heure) | 📋 |
 
 ### À venir

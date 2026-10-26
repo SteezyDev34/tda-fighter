@@ -67,3 +67,13 @@ export function restLabel(seconds: number) {
   const s = seconds % 60;
   return m ? `${m} min${s ? ` ${String(s).padStart(2, "0")}` : ""}` : `${s} s`;
 }
+
+/** Library exercises already done, the most recent first. */
+export function recentExerciseIds(sessions: SportSession[]) {
+  const ids: string[] = [];
+  const sorted = [...sessions].sort((a, b) =>
+    (b.date + (b.time ?? "") + b.createdAt).localeCompare(a.date + (a.time ?? "") + a.createdAt),
+  );
+  for (const s of sorted) for (const e of s.exercises) if (e.exId && !ids.includes(e.exId)) ids.push(e.exId);
+  return ids;
+}

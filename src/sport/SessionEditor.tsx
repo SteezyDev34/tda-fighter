@@ -4,6 +4,7 @@ import {
   CARDIO_ACTIVITIES,
   INTENSITIES,
   kindLabel,
+  recentExerciseIds,
   setsSummary,
   type SessionExercise,
   type SportSession,
@@ -162,6 +163,7 @@ export function SessionEditor({ initial, history, onSave, onCancel, onDelete }: 
         <ExerciseLibrary
           onPick={(ex) => addExercise({ exId: ex.id, name: ex.fr })}
           onPickCustom={(name) => addExercise({ name })}
+          recent={recentExerciseIds(history)}
         />
       </section>
     );
