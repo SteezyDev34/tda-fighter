@@ -91,7 +91,6 @@ Section présente dans le menu, avec la liste de ce qui arrive.
 | Exercices déjà faits en haut de la liste (le plus récent d'abord), marqués « Déjà fait » | ✅ |
 | Calories dépensées estimées pour chaque séance (type, durée, intensité, poids, méthode MET) | ✅ |
 | Saisie des calories affichées par la montre (Fitbit), qui remplacent l'estimation | ✅ |
-| Connexion directe à Fitbit pour récupérer les calories automatiquement | 📋 |
 | Repas adaptés automatiquement aux séances enregistrées (jour d'entraînement, heure) | 📋 |
 
 ### À venir
