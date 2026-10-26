@@ -3,12 +3,41 @@ import { MEAL_SLOT_IDS } from "./shared.js";
 
 export const MealSchema = z.object({
   slot: z.enum(MEAL_SLOT_IDS),
+  /** Advised time, "HH:MM". */
+  time: z.string(),
   name: z.string(),
   ingredients: z.array(z.object({ item: z.string(), quantity: z.string(), grams: z.number(), search: z.string() })),
   apports: z.string(),
   steps: z.array(z.string()),
   why: z.string(),
 });
+
+/** When the user wakes up and trains, "HH:MM" (training empty if no fixed time). */
+export interface Schedule {
+  wake?: string;
+  training?: string;
+}
+
+const HHMM = /^\d{2}:\d{2}$/;
+const hour = (t: string) => t.replace(/^0/, "").replace(":", " h ").replace(/ h 00$/, " h");
+
+/** Tells the AI when to place the meals, following the resources' timing rules. */
+export function scheduleText(schedule: Schedule | undefined, training: boolean) {
+  const wake = schedule?.wake && HHMM.test(schedule.wake) ? schedule.wake : "";
+  const session = training && schedule?.training && HHMM.test(schedule.training) ? schedule.training : "";
+  return `Horaires : ${wake ? `je me lève à ${hour(wake)}` : "heure de lever non précisée (prends 7 h)"}${
+    training ? (session ? `, ma séance est à ${hour(session)}` : ", heure de séance non précisée") : ""
+  }.
+Dans "time", donne l'heure conseillée du repas au format HH:MM, en suivant les ressources :
+- premier repas dans l'heure qui suit le lever, puis 2 à 5 h d'écart entre deux prises (journée type : 7 h, 9 h, 12 h, 15 h, 19 h, à décaler selon mon lever) ;${
+    session
+      ? `
+- pas de gros repas dans l'heure qui précède la séance ; une prise avec un apport TP (ex. whey) dans l'heure ou les 2 h qui suivent ;
+- si la séance est tôt le matin, elle peut se faire à jeun (clé « Wake up sport ») et le petit-déjeuner vient juste après ;
+- dans "why", dis en quelques mots comment le repas se place par rapport à la séance.`
+      : ""
+  }`;
+}
 
 export const ShoppingSchema = z.array(z.object({ item: z.string(), quantity: z.string(), aisle: z.string() }));
 

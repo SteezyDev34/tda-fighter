@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { buildSystem, client, MODEL } from "./_lib/claude.js";
-import { MealSchema, METHOD, ShoppingSchema } from "./_lib/plan.js";
+import { MealSchema, METHOD, scheduleText, ShoppingSchema, type Schedule } from "./_lib/plan.js";
 
 const WeekSchema = z.object({
   types: z.array(
@@ -28,8 +28,9 @@ interface Day {
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).send("POST uniquement");
-  const { days, profile, journal } = req.body as {
+  const { days, schedule, profile, journal } = req.body as {
     days: Day[];
+    schedule?: Schedule;
     profile: Parameters<typeof buildSystem>[0];
     journal: Parameters<typeof buildSystem>[1];
   };
@@ -52,6 +53,8 @@ petit-déjeuner (breakfast), collation du matin (morning_snack), déjeuner (lunc
 Chaque journée type est pour un jour d'entraînement ou un jour de repos ("dayType"), avec les apports prévus pour ce type de jour dans le protocole.
 Donne-leur un nom court (ex. « Jour type 1 – entraînement »).
 Dans "days", associe chaque date à l'index (à partir de 0) d'une journée type du bon type, en alternant pour varier.
+${scheduleText(schedule, days.some((d) => d.training))}
+Ces horaires de séance ne valent que pour les journées types d'entraînement ; les jours de repos, place les repas selon le lever seulement.
 ${METHOD}
 Recettes simples, 3 étapes max. Dans "why", une phrase courte.
 Puis fais la liste de courses de toute la semaine : additionne les quantités selon le nombre de jours où chaque journée type revient, regroupées par rayon.`,

@@ -9,6 +9,7 @@ import {
   type LoggedMeal,
   type MealPlan,
   type MealSlot,
+  type Schedule,
   type SuggestedMeal,
 } from "./types";
 import { recentJournal, usePersisted, type NutritionState } from "./useNutrition";
@@ -20,6 +21,9 @@ const DAY_TYPES: { id: DayType; label: string }[] = [
   { id: "training", label: "Jour d'entraînement" },
   { id: "rest", label: "Jour de repos" },
 ];
+
+/** "07:30" → "7 h 30". */
+const hourLabel = (t: string) => t.replace(/^0/, "").replace(":", " h ").replace(/ h 00$/, " h");
 
 const weekday = (date: string, style: "long" | "short" = "long") =>
   new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", { weekday: style });
@@ -56,7 +60,10 @@ function MealCard({
   return (
     <article className="card stack" aria-busy={replacing}>
       <div className="row between">
-        <span className="label">{slotLabel(m.slot)}</span>
+        <span className="label">
+          {m.time && <span className="meal-time">{hourLabel(m.time)}</span>}
+          {slotLabel(m.slot)}
+        </span>
         {onReplace && (
           <button className="link" onClick={onReplace} disabled={replacing}>
             {replacing ? "Je cherche un autre repas…" : "Changer ce repas"}
@@ -129,6 +136,8 @@ export function PlannerPage({
   const weekDates = Array.from({ length: 7 }, (_, i) => shiftDate(today(), i));
   const [trainingDays, setTrainingDays] = usePersisted<string[]>("training-days", []);
   const [selectedDay, setSelectedDay] = useState(0);
+  const [schedule, setSchedule] = usePersisted<Schedule>("schedule", { wake: "07:00", training: "" });
+  const hasTraining = scope === "week" ? trainingDays.length > 0 : dayType === "training";
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [replacing, setReplacing] = useState<string | null>(null);
@@ -149,7 +158,7 @@ export function PlannerPage({
       const res = await fetch("/api/replace-meal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target, others, dayType, shoppingMeals, targetTimes, profile, journal: recentJournal(journal) }),
+        body: JSON.stringify({ target, others, dayType, schedule, shoppingMeals, targetTimes, profile, journal: recentJournal(journal) }),
       });
       if (!res.ok) throw new Error(await res.text());
       const { meal, shopping } = (await res.json()) as { meal: SuggestedMeal; shopping: MealPlan["shopping"] };
@@ -172,6 +181,7 @@ export function PlannerPage({
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 days: weekDates.map((d) => ({ date: d, weekday: weekday(d), training: trainingDays.includes(weekday(d)) })),
+                schedule,
                 profile,
                 journal: recentJournal(journal),
               }),
@@ -182,6 +192,7 @@ export function PlannerPage({
               body: JSON.stringify({
                 slots: scope === "day" ? MEAL_SLOTS.map((s) => s.id) : [scope],
                 dayType,
+                schedule,
                 profile,
                 journal: recentJournal(journal),
               }),
@@ -266,6 +277,27 @@ export function PlannerPage({
               ))}
             </div>
           </>
+        )}
+        <div className="row times">
+          <label>
+            <span className="label">Je me lève à</span>
+            <input type="time" value={schedule.wake} onChange={(e) => setSchedule({ ...schedule, wake: e.target.value })} />
+          </label>
+          {hasTraining && (
+            <label>
+              <span className="label">Ma séance est à</span>
+              <input
+                type="time"
+                value={schedule.training}
+                onChange={(e) => setSchedule({ ...schedule, training: e.target.value })}
+              />
+            </label>
+          )}
+        </div>
+        {hasTraining && (
+          <p className="small muted">
+            Les heures des repas seront calées sur ton lever et ta séance (2 à 5 h entre deux prises, une prise protéinée après le sport).
+          </p>
         )}
         <button className="primary" onClick={generate} disabled={loading}>
           {loading ? "Je réfléchis…" : "Générer"}

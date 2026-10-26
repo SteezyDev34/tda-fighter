@@ -32,6 +32,7 @@ Dernière mise à jour : 21/10/2026
 | Générer les repas de la semaine : je coche mes jours d'entraînement, l'app crée des journées types (comme la fiche « Mon plan de repas de la semaine »), les répartit sur les 7 jours et fait la liste de courses de la semaine ; chaque repas s'ajoute au journal du bon jour | 🧪 |
 | Recette simple et explication de pourquoi le repas me convient | 🧪 |
 | Choix « jour d'entraînement » ou « jour de repos » avant de générer, pour appliquer les bons apports du protocole | ✅ |
+| Heure du lever et heure de la séance : chaque repas généré affiche son heure conseillée (2 à 5 h entre deux prises, rien de lourd juste avant le sport, une prise protéinée après) ; les heures sont gardées sur l'appareil | 🧪 |
 | Repas composés selon la méthode des apports (TP, BH, MM, E, BG) et les quantités de « 1 apport » des ressources, apports affichés sur chaque repas | 🧪 |
 | Liste de courses générée depuis les repas, regroupée par rayon, cochable | 🧪 |
 | Historique des plans générés (journée, repas, semaine) : une nouvelle génération n'efface plus l'ancienne, je peux rouvrir ou supprimer un plan | ✅ |

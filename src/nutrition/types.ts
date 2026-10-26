@@ -78,6 +78,8 @@ export interface NutritionProfile {
 
 export interface SuggestedMeal {
   slot: MealSlot;
+  /** Advised time "HH:MM", placed from the wake-up and training times. */
+  time?: string;
   name: string;
   /** grams and search let the meal be logged with Open Food Facts nutrients. */
   ingredients: { item: string; quantity: string; grams?: number; search?: string }[];
@@ -103,6 +105,13 @@ export interface WeekPlan {
   days: { date: string; type: number }[];
   /** "date|slot" of the meals already added to the journal. */
   logged: string[];
+}
+
+/** When the user wakes up and trains ("HH:MM"), to place the meals around them. */
+export interface Schedule {
+  wake: string;
+  /** Empty when the session has no fixed time. */
+  training: string;
 }
 
 export interface MealPlan {

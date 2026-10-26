@@ -3,13 +3,13 @@ import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import type { SuggestedMeal } from "../src/nutrition/types";
 import { buildSystem, client, MODEL } from "./_lib/claude.js";
-import { MealSchema, METHOD, ShoppingSchema } from "./_lib/plan.js";
+import { MealSchema, METHOD, scheduleText, ShoppingSchema, type Schedule } from "./_lib/plan.js";
 import { slotLabel } from "./_lib/shared.js";
 
 const ReplaceSchema = z.object({ meal: MealSchema, shopping: ShoppingSchema });
 
 const describe = (m: SuggestedMeal) =>
-  `${slotLabel(m.slot)} : ${m.name}${m.apports ? ` (${m.apports})` : ""} — ${m.ingredients
+  `${slotLabel(m.slot)}${m.time ? ` (${m.time})` : ""} : ${m.name}${m.apports ? ` (${m.apports})` : ""} — ${m.ingredients
     .map((i) => `${i.quantity} ${i.item}`)
     .join(", ")}`;
 
@@ -19,10 +19,11 @@ const describe = (m: SuggestedMeal) =>
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).send("POST uniquement");
-  const { target, others, dayType, shoppingMeals, profile, journal } = req.body as {
+  const { target, others, dayType, schedule, shoppingMeals, profile, journal } = req.body as {
     target: SuggestedMeal;
     others: SuggestedMeal[];
     dayType?: "training" | "rest";
+    schedule?: Schedule;
     /** Every other meal of the plan with how many times it is eaten (a week repeats typical days). */
     shoppingMeals: { meal: SuggestedMeal; times: number }[];
     targetTimes: number;
@@ -48,6 +49,8 @@ ${others.length ? others.map((m) => `- ${describe(m)}`).join("\n") : "- aucun"}
 
 Le nouveau repas doit être vraiment différent de celui que je n'aime pas, et ses apports doivent compléter ceux des autres repas
 pour que la journée respecte le total d'apports TP, BH, MM et E du protocole (en général, les mêmes apports que le repas remplacé).
+${scheduleText(schedule, dayType !== "rest")}
+Garde de préférence la même heure que le repas remplacé${target.time ? ` (${target.time})` : ""}.
 ${METHOD}
 Recettes simples, 5 étapes max. Dans "why", une phrase.
 
