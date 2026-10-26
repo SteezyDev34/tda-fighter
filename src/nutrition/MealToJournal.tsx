@@ -14,6 +14,8 @@ interface Row {
 
 interface Props {
   meal: SuggestedMeal;
+  /** Day of the journal the meal goes to (today by default). */
+  date?: string;
   customFoods: Food[];
   onAdd: (entries: Omit<JournalEntry, "id" | "createdAt">[]) => void;
   onUseFood: (food: Food, grams: number) => void;
@@ -28,7 +30,7 @@ const fmt = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 0 
  * so the nutrients come from the database, never from the AI. The user checks the
  * product and the grams before adding.
  */
-export function MealToJournal({ meal, customFoods, onAdd, onUseFood, onDone, onCancel }: Props) {
+export function MealToJournal({ meal, date, customFoods, onAdd, onUseFood, onDone, onCancel }: Props) {
   const [rows, setRows] = useState<Row[] | null>(null);
 
   useEffect(() => {
@@ -70,7 +72,7 @@ export function MealToJournal({ meal, customFoods, onAdd, onUseFood, onDone, onC
   const add = () => {
     onAdd(
       chosen.map(({ row, food }) => ({
-        date: today(),
+        date: date ?? today(),
         slot: meal.slot,
         description: `${food.name} (${row.grams} g)`,
         nutrients: scale(food.per100g, row.grams),

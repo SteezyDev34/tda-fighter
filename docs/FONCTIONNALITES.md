@@ -28,6 +28,7 @@ Dernière mise à jour : 21/10/2026
 | Fonctionnalité | Statut |
 |---|---|
 | Générer un repas ou une journée complète (5 repas) à partir du journal, des critères et des ressources | 🧪 |
+| Générer les repas de la semaine : je coche mes jours d'entraînement, l'app crée des journées types (comme la fiche « Mon plan de repas de la semaine »), les répartit sur les 7 jours et fait la liste de courses de la semaine ; chaque repas s'ajoute au journal du bon jour | 🧪 |
 | Recette simple et explication de pourquoi le repas me convient | 🧪 |
 | Choix « jour d'entraînement » ou « jour de repos » avant de générer, pour appliquer les bons apports du protocole | ✅ |
 | Repas composés selon la méthode des apports (TP, BH, MM, E, BG) et les quantités de « 1 apport » des ressources, apports affichés sur chaque repas | 🧪 |

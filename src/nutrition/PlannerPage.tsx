@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { shiftDate, today } from "../lib/storage";
+import type { Food } from "./foods";
 import { MealToJournal } from "./MealToJournal";
-import { MEAL_SLOTS, slotLabel, type MealPlan, type MealSlot } from "./types";
-import { recentJournal, type NutritionState } from "./useNutrition";
+import { MEAL_SLOTS, slotLabel, type JournalEntry, type MealPlan, type MealSlot, type SuggestedMeal } from "./types";
+import { recentJournal, usePersisted, type NutritionState } from "./useNutrition";
 
-type Scope = "day" | MealSlot;
+type Scope = "week" | "day" | MealSlot;
 type DayType = "training" | "rest";
 
 const DAY_TYPES: { id: DayType; label: string }[] = [
@@ -11,10 +13,69 @@ const DAY_TYPES: { id: DayType; label: string }[] = [
   { id: "rest", label: "Jour de repos" },
 ];
 
+const weekday = (date: string, style: "long" | "short" = "long") =>
+  new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", { weekday: style });
+const dayTitle = (date: string) =>
+  new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+
+interface MealCardProps {
+  meal: SuggestedMeal;
+  date?: string;
+  logged: boolean;
+  onLogged: () => void;
+  customFoods: Food[];
+  addEntries: (entries: Omit<JournalEntry, "id" | "createdAt">[]) => void;
+  rememberFood: (food: Food, grams: number) => void;
+}
+
+function MealCard({ meal: m, date, logged, onLogged, customFoods, addEntries, rememberFood }: MealCardProps) {
+  const [logging, setLogging] = useState(false);
+  return (
+    <article className="card stack">
+      <span className="label">{slotLabel(m.slot)}</span>
+      <h2>{m.name}</h2>
+      {m.apports && <span className="pill ok start">{m.apports}</span>}
+      <p className="muted">{m.why}</p>
+      <ul>
+        {m.ingredients.map((ing, k) => (
+          <li key={k}>{ing.quantity} {ing.item}</li>
+        ))}
+      </ul>
+      <ol>
+        {m.steps.map((s, k) => <li key={k}>{s}</li>)}
+      </ol>
+      {logging ? (
+        <MealToJournal
+          meal={m}
+          date={date}
+          customFoods={customFoods}
+          onAdd={addEntries}
+          onUseFood={rememberFood}
+          onCancel={() => setLogging(false)}
+          onDone={() => {
+            setLogging(false);
+            onLogged();
+          }}
+        />
+      ) : logged ? (
+        <div className="row">
+          <span className="pill ok">Ajouté au journal ✓</span>
+          <button className="link" onClick={() => setLogging(true)}>L'ajouter à nouveau</button>
+        </div>
+      ) : (
+        <button className="primary" onClick={() => setLogging(true)}>Ajouter au journal</button>
+      )}
+    </article>
+  );
+}
+
 export function PlannerPage({ journal, profile, plan, setPlan, addEntries, rememberFood, customFoods }: NutritionState) {
   const [scope, setScope] = useState<Scope>("day");
-  const [logging, setLogging] = useState<number | null>(null);
   const [dayType, setDayType] = useState<DayType>("training");
+  // The week starts today; training days are picked by weekday.
+  const weekDates = Array.from({ length: 7 }, (_, i) => shiftDate(today(), i));
+  const [trainingDays, setTrainingDays] = usePersisted<string[]>("training-days", []);
+  const [selectedDay, setSelectedDay] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -22,19 +83,30 @@ export function PlannerPage({ journal, profile, plan, setPlan, addEntries, remem
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/meal-plan", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          slots: scope === "day" ? MEAL_SLOTS.map((s) => s.id) : [scope],
-          dayType,
-          profile,
-          journal: recentJournal(journal),
-        }),
-      });
+      const res =
+        scope === "week"
+          ? await fetch("/api/week-plan", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                days: weekDates.map((d) => ({ date: d, weekday: weekday(d), training: trainingDays.includes(weekday(d)) })),
+                profile,
+                journal: recentJournal(journal),
+              }),
+            })
+          : await fetch("/api/meal-plan", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                slots: scope === "day" ? MEAL_SLOTS.map((s) => s.id) : [scope],
+                dayType,
+                profile,
+                journal: recentJournal(journal),
+              }),
+            });
       if (!res.ok) throw new Error(await res.text());
       setPlan((await res.json()) as MealPlan);
-      setLogging(null);
+      setSelectedDay(0);
     } catch (e) {
       setError(`La génération a échoué. Réessaie dans un instant. (${(e as Error).message})`);
     } finally {
@@ -50,6 +122,10 @@ export function PlannerPage({ journal, profile, plan, setPlan, addEntries, remem
     });
 
   const aisles = plan ? [...new Set(plan.shopping.map((s) => s.aisle))] : [];
+  const week = plan?.week;
+  const day = week?.days[selectedDay];
+  const dayPlan = day ? week.types[day.type] : undefined;
+  const cardProps = { customFoods, addEntries, rememberFood };
 
   return (
     <section className="stack">
@@ -57,65 +133,103 @@ export function PlannerPage({ journal, profile, plan, setPlan, addEntries, remem
       <div className="card stack">
         <label htmlFor="scope">Je veux des idées pour</label>
         <select id="scope" value={scope} onChange={(e) => setScope(e.target.value as Scope)}>
+          <option value="week">Toute la semaine (journées types)</option>
           <option value="day">Toute la journée (5 repas)</option>
           {MEAL_SLOTS.map((s) => (
             <option key={s.id} value={s.id}>{s.label}</option>
           ))}
         </select>
-        <span className="label">Aujourd'hui, c'est un</span>
-        <div className="row">
-          {DAY_TYPES.map((d) => (
-            <button key={d.id} type="button" className="chip" aria-pressed={dayType === d.id} onClick={() => setDayType(d.id)}>
-              {d.label}
-            </button>
-          ))}
-        </div>
+        {scope === "week" ? (
+          <>
+            <span className="label">Mes jours d'entraînement</span>
+            <div className="agenda-week">
+              {weekDates.map((d) => {
+                const name = weekday(d);
+                const on = trainingDays.includes(name);
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    className="agenda-day"
+                    aria-pressed={on}
+                    aria-label={`${name} : ${on ? "entraînement" : "repos"}`}
+                    onClick={() => setTrainingDays(on ? trainingDays.filter((x) => x !== name) : [...trainingDays, name])}
+                  >
+                    <strong>{weekday(d, "short").replace(".", "")}</strong>
+                    <span className="small muted">{on ? "Sport" : "Repos"}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <p className="small muted">La génération d'une semaine peut prendre une à deux minutes.</p>
+          </>
+        ) : (
+          <>
+            <span className="label">Aujourd'hui, c'est un</span>
+            <div className="row">
+              {DAY_TYPES.map((d) => (
+                <button key={d.id} type="button" className="chip" aria-pressed={dayType === d.id} onClick={() => setDayType(d.id)}>
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         <button className="primary" onClick={generate} disabled={loading}>
           {loading ? "Je réfléchis…" : "Générer"}
         </button>
         {error && <p className="error">{error}</p>}
       </div>
 
-      {plan?.meals.map((m, i) => (
-        <article key={i} className="card stack">
-          <span className="label">{slotLabel(m.slot)}</span>
-          <h2>{m.name}</h2>
-          {m.apports && <span className="pill ok start">{m.apports}</span>}
-          <p className="muted">{m.why}</p>
-          <ul>
-            {m.ingredients.map((ing, k) => (
-              <li key={k}>{ing.quantity} {ing.item}</li>
+      {week && (
+        <div className="card stack tight">
+          <span className="label">Ma semaine</span>
+          <div className="agenda-week">
+            {week.days.map((d, i) => (
+              <button key={d.date} className="agenda-day" aria-pressed={i === selectedDay} onClick={() => setSelectedDay(i)}>
+                <span className="small muted">{weekday(d.date, "short").replace(".", "")}</span>
+                <strong>{Number(d.date.slice(8))}</strong>
+                <span className="small muted">J{d.type + 1}</span>
+              </button>
             ))}
-          </ul>
-          <ol>
-            {m.steps.map((s, k) => <li key={k}>{s}</li>)}
-          </ol>
-          {logging === i ? (
-            <MealToJournal
-              meal={m}
-              customFoods={customFoods}
-              onAdd={addEntries}
-              onUseFood={rememberFood}
-              onCancel={() => setLogging(null)}
-              onDone={() => {
-                setLogging(null);
-                setPlan({ ...plan, meals: plan.meals.map((x, j) => (j === i ? { ...x, logged: true } : x)) });
-              }}
-            />
-          ) : m.logged ? (
-            <div className="row">
-              <span className="pill ok">Ajouté au journal ✓</span>
-              <button className="link" onClick={() => setLogging(i)}>L'ajouter à nouveau</button>
-            </div>
-          ) : (
-            <button className="primary" onClick={() => setLogging(i)}>Ajouter au journal</button>
+          </div>
+          {day && dayPlan && (
+            <p className="small muted">
+              <span className="agenda-title">{dayTitle(day.date)}</span> · {dayPlan.name}
+            </p>
           )}
-        </article>
-      ))}
+        </div>
+      )}
+
+      {day && dayPlan &&
+        dayPlan.meals.map((m) => {
+          const key = `${day.date}|${m.slot}`;
+          return (
+            <MealCard
+              key={key}
+              meal={m}
+              date={day.date}
+              logged={week!.logged.includes(key)}
+              onLogged={() => setPlan({ ...plan!, week: { ...week!, logged: [...week!.logged, key] } })}
+              {...cardProps}
+            />
+          );
+        })}
+
+      {!week &&
+        plan?.meals.map((m, i) => (
+          <MealCard
+            key={i}
+            meal={m}
+            logged={!!m.logged}
+            onLogged={() => setPlan({ ...plan, meals: plan.meals.map((x, j) => (j === i ? { ...x, logged: true } : x)) })}
+            {...cardProps}
+          />
+        ))}
 
       {plan && plan.shopping.length > 0 && (
         <div className="card stack">
-          <h2>Liste de courses</h2>
+          <h2>Liste de courses{week ? " de la semaine" : ""}</h2>
           {aisles.map((aisle) => (
             <div key={aisle}>
               <span className="label">{aisle}</span>

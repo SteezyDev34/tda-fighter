@@ -88,9 +88,19 @@ export interface ShoppingItem {
   checked: boolean;
 }
 
+/** A week built from a few typical days, like the resources' weekly meal plan sheet. */
+export interface WeekPlan {
+  types: { name: string; dayType: "training" | "rest"; meals: SuggestedMeal[] }[];
+  /** Each date follows one typical day (index in types). */
+  days: { date: string; type: number }[];
+  /** "date|slot" of the meals already added to the journal. */
+  logged: string[];
+}
+
 export interface MealPlan {
   meals: SuggestedMeal[];
   shopping: ShoppingItem[];
+  week?: WeekPlan;
 }
 
 export const EMPTY_PROFILE: NutritionProfile = {
