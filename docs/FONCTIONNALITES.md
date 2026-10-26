@@ -3,7 +3,7 @@
 Mis à jour à chaque nouvelle fonctionnalité demandée.
 Statuts : ✅ codé · 🧪 codé, IA à brancher · 🎨 prototype seulement · 📋 prévu
 
-Dernière mise à jour : 21/10/2026
+Dernière mise à jour : 26/10/2026
 
 ## Nutrition
 
@@ -75,6 +75,20 @@ Dernière mise à jour : 21/10/2026
 | Points d'XP, niveaux et séries | 🎨 |
 
 ## Sport
+
+### Écran Sport
+| Fonctionnalité | Statut |
+|---|---|
+| Calendrier des séances (passées et à venir), avec le type de séance sur chaque jour | ✅ |
+| Séance de musculation : exercices avec séries, répétitions, charge (kg) et repos | ✅ |
+| Rappel « La dernière fois » et séries pré-remplies avec celles de la dernière séance | ✅ |
+| Séance de cardio : activité, durée, distance, intensité | ✅ |
+| Autre activité sportive (foot, boxe, yoga…) : durée, intensité, notes | ✅ |
+| Bibliothèque de 876 exercices en français avec images départ/arrivée (Free Exercise DB, domaine public), recherche et filtre par muscle | ✅ |
+| Ajout d'un exercice absent de la bibliothèque | ✅ |
+| Repas adaptés automatiquement aux séances enregistrées (jour d'entraînement, heure) | 📋 |
+
+### À venir
 | Fonctionnalité | Statut |
 |---|---|
 | Check-in énergie (basse, moyenne, haute) | 🎨 |

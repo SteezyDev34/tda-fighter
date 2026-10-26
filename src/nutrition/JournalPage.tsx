@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { today } from "../lib/storage";
+import { Agenda } from "../lib/Agenda";
 import { DailyIntake } from "./DailyIntake";
-import { JournalAgenda } from "./JournalAgenda";
 import { FoodPicker } from "./FoodPicker";
 import { MEAL_SLOTS, type JournalEntry, type LoggedMeal, type MealSlot } from "./types";
 import type { NutritionState } from "./useNutrition";
@@ -18,6 +18,13 @@ function currentSlot(): MealSlot {
 
 const macroLine = ({ nutrients: n }: JournalEntry) =>
   `${Math.round(n.kcal)} kcal · P ${Math.round(n.protein)} g · G ${Math.round(n.carbs)} g · L ${Math.round(n.fat)} g`;
+
+/** Calories eaten each day, shown in the agenda. */
+function kcalByDay(journal: JournalEntry[]) {
+  const kcal = new Map<string, number>();
+  for (const e of journal) kcal.set(e.date, (kcal.get(e.date) ?? 0) + e.nutrients.kcal);
+  return new Map([...kcal].filter(([, k]) => Math.round(k) > 0).map(([d, k]) => [d, String(Math.round(k))]));
+}
 
 /** The generated meal a group of lines comes from, with the AI's recipe and explanation. */
 function GeneratedMeal({ logged }: { logged: LoggedMeal }) {
@@ -101,7 +108,7 @@ export function JournalPage({
   return (
     <section className="stack">
       <h1>{isToday ? "Journal du jour" : "Journal"}</h1>
-      <JournalAgenda date={date} journal={journal} onChange={setDate} />
+      <Agenda date={date} marks={kcalByDay(journal)} onChange={setDate} />
       <DailyIntake entries={todays} targets={profile.targets} />
 
       <div className="card stack">
