@@ -47,6 +47,8 @@ export interface SportSession {
   /** Kilometres, for cardio. */
   distance?: number;
   intensity?: Intensity;
+  /** Calories burned, as shown by the watch. Without it, the app estimates them. */
+  kcal?: number;
   notes?: string;
   exercises: SessionExercise[];
   createdAt: string;

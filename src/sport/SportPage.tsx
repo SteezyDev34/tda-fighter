@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Agenda } from "../lib/Agenda";
+import type { NutritionState } from "../nutrition/useNutrition";
+import { sessionKcal, weightFrom } from "./calories";
 import { today } from "../lib/storage";
 import { usePersisted } from "../nutrition/useNutrition";
 import { SessionEditor } from "./SessionEditor";
@@ -23,12 +25,14 @@ function sessionMarks(sessions: SportSession[]) {
   return new Map([...byDay].map(([d, kinds]) => [d, kinds.size > 1 ? `${kinds.size} ×` : [...kinds][0]]));
 }
 
-function SessionCard({ s, onEdit }: { s: SportSession; onEdit: () => void }) {
+function SessionCard({ s, weight, onEdit }: { s: SportSession; weight?: number; onEdit: () => void }) {
+  const { kcal, measured } = sessionKcal(s, weight);
   const facts = [
     s.time && s.time.replace(/^0/, "").replace(":", " h ").replace(/ h 00$/, " h"),
     s.duration && `${s.duration} min`,
     s.distance && `${String(s.distance).replace(".", ",")} km`,
     s.intensity && INTENSITIES.find((i) => i.id === s.intensity)?.label,
+    kcal && (measured ? `${kcal} kcal` : `≈ ${kcal} kcal estimées`),
   ].filter(Boolean);
   return (
     <article className="card stack tight">
@@ -66,7 +70,8 @@ const newSession = (kind: SessionKind, date: string): SportSession => ({
   createdAt: new Date().toISOString(),
 });
 
-export function SportPage() {
+export function SportPage({ profile }: NutritionState) {
+  const weight = weightFrom(profile.body);
   const [sessions, setSessions] = usePersisted<SportSession[]>("sport-sessions", []);
   const [date, setDate] = useState(today());
   const [editing, setEditing] = useState<{ session: SportSession; isNew: boolean } | null>(null);
@@ -76,6 +81,7 @@ export function SportPage() {
       <SessionEditor
         initial={editing.session}
         history={sessions}
+        weight={weight}
         onCancel={() => setEditing(null)}
         onSave={(s) => {
           setSessions((all) => (editing.isNew ? [s, ...all] : all.map((x) => (x.id === s.id ? s : x))));
@@ -117,7 +123,7 @@ export function SportPage() {
       {ofDay.length === 0 ? (
         <p className="muted">Aucune séance ce jour-là.</p>
       ) : (
-        ofDay.map((s) => <SessionCard key={s.id} s={s} onEdit={() => setEditing({ session: s, isNew: false })} />)
+        ofDay.map((s) => <SessionCard key={s.id} s={s} weight={weight} onEdit={() => setEditing({ session: s, isNew: false })} />)
       )}
     </section>
   );

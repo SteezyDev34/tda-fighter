@@ -1,4 +1,5 @@
 import { useEffect, useState, type InputHTMLAttributes } from "react";
+import { estimateKcal } from "./calories";
 import { ExerciseLibrary } from "./ExerciseLibrary";
 import {
   CARDIO_ACTIVITIES,
@@ -131,16 +132,19 @@ function SetsEditor({
 interface Props {
   initial: SportSession;
   history: SportSession[];
+  /** Body weight in kg, for the calories estimate. */
+  weight?: number;
   onSave: (s: SportSession) => void;
   onCancel: () => void;
   onDelete?: () => void;
 }
 
-export function SessionEditor({ initial, history, onSave, onCancel, onDelete }: Props) {
+export function SessionEditor({ initial, history, weight, onSave, onCancel, onDelete }: Props) {
   const [s, setS] = useState(initial);
   const [picking, setPicking] = useState(false);
   const others = history.filter((h) => h.id !== s.id);
   const set = (patch: Partial<SportSession>) => setS((x) => ({ ...x, ...patch }));
+  const estimate = estimateKcal(s, weight);
 
   const addExercise = (ex: { exId?: string; name: string }) => {
     const previous = lastTime(others, ex, s.date);
@@ -223,6 +227,23 @@ export function SessionEditor({ initial, history, onSave, onCancel, onDelete }: 
             </label>
           )}
         </div>
+
+        <label>
+          <span className="label">Calories dépensées</span>
+          <NumField
+            inputMode="numeric"
+            value={s.kcal}
+            onValue={(v) => set({ kcal: v })}
+            placeholder={estimate ? `≈ ${estimate} kcal estimées` : "Chiffre de ta montre"}
+          />
+        </label>
+        <p className="small muted">
+          {estimate
+            ? "Laisse vide pour garder l'estimation, ou mets le chiffre de ta Fitbit."
+            : weight
+              ? "Indique la durée pour avoir une estimation, ou mets le chiffre de ta Fitbit."
+              : "Ajoute ton poids dans Nutrition › Critères (« Moi ») pour avoir une estimation."}
+        </p>
 
         <span className="label">Intensité</span>
         <div className="row">

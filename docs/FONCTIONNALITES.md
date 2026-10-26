@@ -89,6 +89,9 @@ Section présente dans le menu, avec la liste de ce qui arrive.
 | Bibliothèque de 876 exercices en français avec images départ/arrivée (Free Exercise DB, domaine public), recherche et filtre par muscle | ✅ |
 | Ajout d'un exercice absent de la bibliothèque | ✅ |
 | Exercices déjà faits en haut de la liste (le plus récent d'abord), marqués « Déjà fait » | ✅ |
+| Calories dépensées estimées pour chaque séance (type, durée, intensité, poids, méthode MET) | ✅ |
+| Saisie des calories affichées par la montre (Fitbit), qui remplacent l'estimation | ✅ |
+| Connexion directe à Fitbit pour récupérer les calories automatiquement | 📋 |
 | Repas adaptés automatiquement aux séances enregistrées (jour d'entraînement, heure) | 📋 |
 
 ### À venir
