@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { today } from "../lib/storage";
-import { PRIORITIES, type CuTask, type Domain } from "./types";
+import { PRIORITIES, type CuTask, type Domain, type Priority } from "./types";
 import { dayOf, dueLabel, msOf, navigate, useTasksState } from "./useTasks";
 
 /** Code screen, setup message or errors, then the screen itself. */
@@ -127,20 +127,58 @@ export function TaskRow({ task, showList = true }: { task: CuTask; showList?: bo
 export function CaptureBox() {
   const t = useTasksState();
   const [text, setText] = useState("");
-  const [domain, setDomain] = useState<Domain>(t.domainFilter === "all" ? "perso" : t.domainFilter);
+  // "auto": the AI picks the project among all lists; pro / perso narrow it down.
+  const [domain, setDomain] = useState<Domain | "auto">(t.domainFilter === "all" ? "auto" : t.domainFilter);
   const [forToday, setForToday] = useState(false);
-  const [saved, setSaved] = useState("");
-  const listId = t.captureLists[domain] ?? defaultList(t.spaces, t.perso, domain);
-  const list = t.spaces.flatMap((s) => s.lists.map((l) => ({ ...l, space: s.name }))).find((l) => l.id === listId);
+  const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState<{ text: string; url?: string } | null>(null);
+  const allLists = t.spaces.flatMap((s) =>
+    s.lists.map((l) => ({ ...l, spaceId: s.id, path: [s.name, l.folder, /^list[e]?$/i.test(l.name) ? "" : l.name].filter(Boolean).join(" › ") })),
+  );
+  const fallbackDomain: Domain = domain === "auto" ? "perso" : domain;
+  const fallbackId = t.captureLists[fallbackDomain] ?? defaultList(t.spaces, t.perso, fallbackDomain);
+
+  /** Asks the AI where the task goes; falls back to the capture list. */
+  const sort = async (line: string) => {
+    const lists = allLists
+      .filter((l) => domain === "auto" || t.domainOf(l.spaceId) === domain)
+      .map((l) => ({
+        id: l.id,
+        path: l.path,
+        domain: t.domainOf(l.spaceId),
+        examples: t.tasks.filter((x) => x.listId === l.id && !x.parent).slice(0, 4).map((x) => x.name),
+      }));
+    try {
+      const res = await fetch("/api/sort-capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: line, today: today(), lists }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      return (await res.json()) as { listId: string; name: string; due: string | null; priority: Priority | null };
+    } catch {
+      return fallbackId ? { listId: fallbackId, name: line, due: null, priority: null } : null;
+    }
+  };
 
   const submit = async () => {
-    if (!text.trim() || !listId) return;
-    const task = await t.create(listId, text.trim(), forToday ? { due: msOf(today()) } : {});
-    if (task) {
-      setText("");
-      setSaved(`Ajouté dans ${list?.space} › ${list?.name}`);
-      setTimeout(() => setSaved(""), 3000);
+    const line = text.trim();
+    if (!line) return;
+    setBusy(true);
+    const sorted = await sort(line);
+    if (sorted) {
+      const due = forToday ? today() : sorted.due;
+      const task = await t.create(sorted.listId, sorted.name, {
+        ...(due && { due: msOf(due) }),
+        ...(sorted.priority && { priority: sorted.priority }),
+      });
+      if (task) {
+        setText("");
+        const where = allLists.find((l) => l.id === task.listId)?.path ?? task.listName;
+        setSaved({ text: `« ${task.name} » rangé dans ${where}${due ? ` · ${dueLabel(msOf(due))}` : ""}`, url: task.url });
+      }
     }
+    setBusy(false);
   };
 
   return (
@@ -153,13 +191,19 @@ export function CaptureBox() {
     >
       <span className="label">Vider ma tête</span>
       <div className="row">
-        <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Une idée, une tâche… Entrée pour l'ajouter" aria-label="Nouvelle tâche" />
-        <button className="primary" disabled={!text.trim() || !listId} aria-label="Ajouter">+</button>
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Ex. : envoyer le devis Dorado vendredi"
+          aria-label="Nouvelle tâche"
+          disabled={busy}
+        />
+        <button className="primary" disabled={!text.trim() || busy} aria-label="Ajouter">{busy ? "…" : "+"}</button>
       </div>
       <div className="row wrap">
-        {(["perso", "pro"] as const).map((d) => (
+        {(["auto", "perso", "pro"] as const).map((d) => (
           <button key={d} type="button" className="chip" aria-pressed={domain === d} onClick={() => setDomain(d)}>
-            {d === "pro" ? "Pro" : "Perso"}
+            {d === "auto" ? "✨ Rangement auto" : d === "pro" ? "Pro" : "Perso"}
           </button>
         ))}
         <button type="button" className="chip" aria-pressed={forToday} onClick={() => setForToday(!forToday)}>
@@ -167,10 +211,21 @@ export function CaptureBox() {
         </button>
       </div>
       <p className="small muted">
-        {saved ||
-          (list
-            ? `Va dans ${list.space} › ${list.name}`
-            : "Choisis la liste où ranger tes captures dans l'onglet Projets.")}
+        {busy
+          ? "L'IA range ta tâche…"
+          : saved
+            ? (
+                <>
+                  {saved.text}
+                  {saved.url && (
+                    <>
+                      {" · "}
+                      <a href={saved.url} target="_blank" rel="noreferrer">Voir dans ClickUp</a>
+                    </>
+                  )}
+                </>
+              )
+            : "L'IA choisit le projet et repère la date (« demain », « vendredi »…)."}
       </p>
     </form>
   );
