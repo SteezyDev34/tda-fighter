@@ -18,7 +18,10 @@ import {
   planDays,
   priorityOf,
   QUADRANTS,
+  dayWindow,
+  DEFAULT_WINDOW,
   mondayOf,
+  type WorkWindow,
   weekday,
   type Triage,
 } from "./week";
@@ -69,7 +72,7 @@ export function WeekPage() {
   const set = (patch: Partial<WeekState>) => setWeek({ ...week, ...patch });
   const [showAll, setShowAll] = useState(false);
   const [projectIdx, setProjectIdx] = useState(0);
-  const [workWindow, setWorkWindow] = usePersisted("work-window", { start: "09:00", end: "18:00" });
+  const [workWindow, setWorkWindow] = usePersisted<WorkWindow>("work-window", DEFAULT_WINDOW);
   const [calBusy, setCalBusy] = useState(false);
   const [calResult, setCalResult] = useState("");
   const [newTask, setNewTask] = useState("");
@@ -191,8 +194,7 @@ export function WeekPage() {
     try {
       const blocks = week.plan.days.map((d) => ({
         date: d.date,
-        from: new Date(`${d.date}T${workWindow.start}:00`).toISOString(),
-        to: new Date(`${d.date}T${workWindow.end}:00`).toISOString(),
+        ...dayWindow(d.date, workWindow),
         tasks: d.taskIds
           .map(byId)
           .filter((x): x is CuTask => !!x && !x.closed)
@@ -211,10 +213,11 @@ export function WeekPage() {
         body: JSON.stringify({ action: "sync", days: blocks, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
       });
       if (!res.ok) throw new Error(await res.text());
-      const r = (await res.json()) as { created: number; unplaced: string[] };
+      const r = (await res.json()) as { created: number; updated: number; removed: number; unplaced: string[] };
       const left = r.unplaced.map((id) => byId(id)?.name).filter(Boolean);
+      t.setCalendarOn(true);
       setCalResult(
-        `✓ ${r.created} bloc${r.created > 1 ? "s" : ""} dans ton agenda.` +
+        `✓ Agenda à jour : ${r.created} bloc${r.created > 1 ? "s" : ""} créé${r.created > 1 ? "s" : ""}, ${r.updated} mis à jour, ${r.removed} retiré${r.removed > 1 ? "s" : ""}.` +
           (left.length ? ` Pas de créneau libre pour : ${left.join(", ")}.` : ""),
       );
     } catch (e) {
@@ -567,7 +570,7 @@ export function WeekPage() {
                   <p className="small">
                     Chaque tâche devient un bloc de travail dans ton agenda, de la durée estimée avec la marge, dans tes créneaux libres entre{" "}
                     {workWindow.start.replace(":", " h ")} et {workWindow.end.replace(":", " h ")}. Une couleur par projet (à changer dans Projets).
-                    Refaire l'envoi remplace les anciens blocs, sans toucher à tes autres rendez-vous.
+                    Chaque bloc reste lié à sa tâche : renvoyer met à jour les blocs au lieu d'en créer des doublons, et un bloc que tu as déplacé à la main garde sa place s'il est sur le bon jour. Tes autres rendez-vous ne sont jamais touchés.
                   </p>
                   <button className={week.applied ? "primary" : undefined} onClick={toCalendar} disabled={calBusy}>
                     {calBusy ? "Envoi vers Google Agenda…" : "Mettre mes blocs dans Google Agenda"}

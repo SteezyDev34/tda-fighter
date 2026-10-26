@@ -65,3 +65,18 @@ export function guessTriage(t: CuTask): Triage {
     urgent: t.priority === "urgent" || soon,
   };
 }
+
+export interface WorkWindow {
+  start: string;
+  end: string;
+}
+
+export const DEFAULT_WINDOW: WorkWindow = { start: "09:00", end: "18:00" };
+
+/** A day's work window and its local bounds, as ISO times for the server (which runs in UTC). */
+export const dayWindow = (day: string, w: WorkWindow) => ({
+  from: new Date(`${day}T${w.start}:00`).toISOString(),
+  to: new Date(`${day}T${w.end}:00`).toISOString(),
+  dayStart: new Date(`${day}T00:00:00`).toISOString(),
+  dayEnd: new Date(`${shiftDate(day, 1)}T00:00:00`).toISOString(),
+});

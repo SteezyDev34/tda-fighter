@@ -105,6 +105,8 @@ Reliée à ClickUp : les tâches viennent de ClickUp et chaque changement y est 
 | Application du plan : chaque tâche reçoit son jour comme échéance dans ClickUp | ✅ |
 | Tâches datées mises de côté (« Pas cette semaine ») décalées automatiquement au lundi suivant | ✅ |
 | Envoi du plan dans Google Agenda : un bloc par tâche (durée avec marge) dans les créneaux libres des heures de travail, une couleur par projet | 🧪 |
+| Blocs liés à leur tâche : renvoi sans doublon (mise à jour, déplacement ou retrait), bloc déplacé à la main gardé s'il est sur le bon jour | 🧪 |
+| Le bloc suit la tâche : retiré quand elle est terminée, déplacé si elle change de jour, mis à jour si l'estimation change | 🧪 |
 | Aujourd'hui : temps prévu face au temps possible, alerte si c'est trop | ✅ |
 
 ### Onglet Projets

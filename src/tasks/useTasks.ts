@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useState } from "react";
 import { shiftDate, today } from "../lib/storage";
 import { usePersisted } from "../nutrition/useNutrition";
 import { GCAL_COLORS } from "./colors";
+import { BUFFER, dayWindow, DEFAULT_MIN, DEFAULT_WINDOW, type WorkWindow } from "./week";
 import type { CuSpace, CuTask, Domain, Priority } from "./types";
 
 /** Error the screens show differently: no code yet, or ClickUp not set up. */
@@ -39,6 +40,9 @@ export function useTasks() {
   const [doneDays, setDoneDays] = usePersisted<Record<string, number>>("task-done-days", {});
   /** Google Calendar color of each project (ClickUp list). */
   const [projectColors, setProjectColors] = usePersisted<Record<string, string>>("project-colors", {});
+  /** Set once blocks were sent to Google Calendar: task changes then follow there. */
+  const [calendarOn, setCalendarOn] = usePersisted("calendar-on", false);
+  const [workWindow] = usePersisted<WorkWindow>("work-window", DEFAULT_WINDOW);
   /** The task chosen for « Maintenant ». */
   const [focusId, setFocusId] = usePersisted<string | null>("task-focus", null);
   const [loading, setLoading] = useState(false);
@@ -131,6 +135,31 @@ export function useTasks() {
     }
   };
 
+  /** Its Google Calendar block follows the task (done, new day, new estimate). Best effort. */
+  const followCalendar = (task: CuTask) => {
+    if (!calendarOn || task.parent) return;
+    const due = task.due ? dayOf(task.due) : undefined;
+    fetch("/api/calendar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-tdaf-code": code },
+      body: JSON.stringify({
+        action: "task",
+        task: {
+          id: task.id,
+          name: task.name,
+          minutes: Math.round(((task.estimate ? task.estimate / 60_000 : undefined) ?? DEFAULT_MIN) * BUFFER),
+          colorId: colorOf(task.listId),
+          project: pathOf(task),
+          url: task.url,
+          closed: task.closed,
+          due,
+        },
+        window: due ? dayWindow(due, workWindow) : undefined,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      }),
+    }).catch(() => {});
+  };
+
   const complete = (task: CuTask, done = true) =>
     run(async () => {
       // Shown done at once: finishing should feel instant.
@@ -139,6 +168,7 @@ export function useTasks() {
       put(updated);
       const d = today();
       setDoneDays((all) => ({ ...all, [d]: Math.max(0, (all[d] ?? 0) + (done ? 1 : -1)) }));
+      followCalendar(updated);
       return updated;
     }).then((r) => {
       if (!r) put(task);
@@ -160,6 +190,7 @@ export function useTasks() {
       put({ ...task, due: pick("due"), priority: pick("priority"), estimate: pick("estimate") });
       const { task: updated } = await call<{ task: CuTask }>({ action: "update", taskId: task.id, ...patch });
       put(updated);
+      followCalendar(updated);
       return updated;
     });
 
@@ -188,6 +219,7 @@ export function useTasks() {
     setPersoSpaces,
     domainOf,
     pathOf,
+    setCalendarOn,
     colorOf,
     nextColor,
     inFilter,
