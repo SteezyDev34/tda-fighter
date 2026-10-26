@@ -17,6 +17,7 @@ import {
   planDays,
   priorityOf,
   QUADRANTS,
+  mondayOf,
   weekday,
   type Triage,
 } from "./week";
@@ -167,6 +168,12 @@ export function WeekPage() {
         const x = byId(id);
         if (x && (!x.due || dayOf(x.due) !== d.date)) await t.update(x, { due: msOf(d.date) });
       }
+    }
+    // Tasks set aside move to next Monday, so they don't stay late; undated ones stay undated.
+    const nextMonday = shiftDate(mondayOf(days[0]), 7);
+    for (const l of week.plan.later) {
+      const x = byId(l.taskId);
+      if (x?.due && dayOf(x.due) < nextMonday) await t.update(x, { due: msOf(nextMonday) });
     }
     setBusy(false);
     set({ applied: true });
@@ -490,7 +497,7 @@ export function WeekPage() {
                   </ul>
                 </div>
                 {week.applied ? (
-                  <p className="cheer" role="status">✓ Plan appliqué : chaque tâche a son jour dans ClickUp. Tu le retrouves dans « Aujourd'hui ».</p>
+                  <p className="cheer" role="status">✓ Plan appliqué : chaque tâche a son jour dans ClickUp, et les tâches datées mises de côté passent à lundi prochain. Tu retrouves tout dans « Aujourd'hui ».</p>
                 ) : (
                   <button className="primary" onClick={apply} disabled={busy}>
                     {busy ? "Mise à jour de ClickUp…" : "Appliquer : mettre ces dates dans ClickUp"}

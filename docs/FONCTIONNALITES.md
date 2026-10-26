@@ -102,6 +102,7 @@ Reliée à ClickUp : les tâches viennent de ClickUp et chaque changement y est 
 | Heures disponibles par jour, 70 % planifiés pour garder de la marge, jauge « ce qui tient » | ✅ |
 | Plan de la semaine par l'IA (objectifs des projets, priorités, échéances, règle 1-3-5, énergie) avec conseils et tâches mises de côté | 🧪 |
 | Application du plan : chaque tâche reçoit son jour comme échéance dans ClickUp | ✅ |
+| Tâches datées mises de côté (« Pas cette semaine ») décalées automatiquement au lundi suivant | ✅ |
 | Aujourd'hui : temps prévu face au temps possible, alerte si c'est trop | ✅ |
 
 ### Onglet Projets
