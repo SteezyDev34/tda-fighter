@@ -113,6 +113,8 @@ export interface MealPlan {
   label?: string;
   meals: SuggestedMeal[];
   shopping: ShoppingItem[];
+  /** Training or rest day the meals were made for (single-day plans). */
+  dayType?: "training" | "rest";
   week?: WeekPlan;
 }
 

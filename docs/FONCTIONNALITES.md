@@ -36,7 +36,7 @@ Dernière mise à jour : 21/10/2026
 | Liste de courses générée depuis les repas, regroupée par rayon, cochable | 🧪 |
 | Historique des plans générés (journée, repas, semaine) : une nouvelle génération n'efface plus l'ancienne, je peux rouvrir ou supprimer un plan | ✅ |
 | Bouton « Ajouter au journal » sur un repas généré : chaque ingrédient est retrouvé dans Open Food Facts, je vérifie le produit et les grammes, je choisis le jour et le repas, puis j'ajoute (et je peux le rajouter si je l'ai retiré) | ✅ |
-| Remplacer un plat en un tap | 📋 |
+| « Changer ce repas » : regénérer un seul repas qui ne plaît pas, en gardant les autres ; le nouveau complète leurs apports et la liste de courses est refaite (aussi dans le plan de la semaine) | 🧪 |
 | Retirer de la liste ce que j'ai déjà à la maison | 📋 |
 
 ### Écran Coach

@@ -31,17 +31,38 @@ interface MealCardProps {
   date?: string;
   logged: boolean;
   onLogged: () => void;
+  /** Asks the AI for another meal at the same moment, keeping the others. */
+  onReplace?: () => void;
+  replacing?: boolean;
   customFoods: Food[];
   addEntries: (entries: Omit<JournalEntry, "id" | "createdAt">[]) => void;
   addLoggedMeal: (meal: LoggedMeal) => void;
   rememberFood: (food: Food, grams: number) => void;
 }
 
-function MealCard({ meal: m, date, logged, onLogged, customFoods, addEntries, addLoggedMeal, rememberFood }: MealCardProps) {
+function MealCard({
+  meal: m,
+  date,
+  logged,
+  onLogged,
+  onReplace,
+  replacing,
+  customFoods,
+  addEntries,
+  addLoggedMeal,
+  rememberFood,
+}: MealCardProps) {
   const [logging, setLogging] = useState(false);
   return (
-    <article className="card stack">
-      <span className="label">{slotLabel(m.slot)}</span>
+    <article className="card stack" aria-busy={replacing}>
+      <div className="row between">
+        <span className="label">{slotLabel(m.slot)}</span>
+        {onReplace && (
+          <button className="link" onClick={onReplace} disabled={replacing}>
+            {replacing ? "Je cherche un autre repas…" : "Changer ce repas"}
+          </button>
+        )}
+      </div>
       <h2>{m.name}</h2>
       {m.apports && <span className="pill ok start">{m.apports}</span>}
       <p className="muted">{m.why}</p>
@@ -110,6 +131,35 @@ export function PlannerPage({
   const [selectedDay, setSelectedDay] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [replacing, setReplacing] = useState<string | null>(null);
+
+  /** Replaces one meal: the others stay, the new one completes their apports, the shopping list is redone. */
+  const replaceMeal = async (
+    key: string,
+    target: SuggestedMeal,
+    others: SuggestedMeal[],
+    dayType: DayType | undefined,
+    shoppingMeals: { meal: SuggestedMeal; times: number }[],
+    targetTimes: number,
+    apply: (meal: SuggestedMeal, shopping: MealPlan["shopping"]) => MealPlan,
+  ) => {
+    setReplacing(key);
+    setError("");
+    try {
+      const res = await fetch("/api/replace-meal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ target, others, dayType, shoppingMeals, targetTimes, profile, journal: recentJournal(journal) }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const { meal, shopping } = (await res.json()) as { meal: SuggestedMeal; shopping: MealPlan["shopping"] };
+      setPlan(apply(meal, shopping));
+    } catch (e) {
+      setError(`Le changement de repas a échoué. Réessaie dans un instant. (${(e as Error).message})`);
+    } finally {
+      setReplacing(null);
+    }
+  };
 
   const generate = async () => {
     setLoading(true);
@@ -144,6 +194,7 @@ export function PlannerPage({
         id: crypto.randomUUID(),
         createdAt: new Date().toISOString(),
         label,
+        ...(scope !== "week" && { dayType }),
       };
       setHistory((h) => [created, ...h].slice(0, MAX_PLANS));
       setCurrent(created);
@@ -219,7 +270,7 @@ export function PlannerPage({
         <button className="primary" onClick={generate} disabled={loading}>
           {loading ? "Je réfléchis…" : "Générer"}
         </button>
-        {error && <p className="error">{error}</p>}
+        {error && !plan && <p className="error">{error}</p>}
       </div>
 
       {history.length > 0 && (
@@ -284,16 +335,49 @@ export function PlannerPage({
         </div>
       )}
 
-      {day && dayPlan &&
-        dayPlan.meals.map((m) => {
+      {error && plan && <p className="error">{error}</p>}
+
+      {week && day && dayPlan &&
+        dayPlan.meals.map((m, k) => {
           const key = `${day.date}|${m.slot}`;
+          const timesOf = (t: number) => week.days.filter((d) => d.type === t).length;
           return (
             <MealCard
-              key={key}
+              key={`${plan!.id}-${key}`}
               meal={m}
               date={day.date}
-              logged={week!.logged.includes(key)}
-              onLogged={() => setPlan({ ...plan!, week: { ...week!, logged: [...week!.logged, key] } })}
+              logged={week.logged.includes(key)}
+              onLogged={() => setPlan({ ...plan!, week: { ...week, logged: [...week.logged, key] } })}
+              replacing={replacing === key}
+              onReplace={() =>
+                replaceMeal(
+                  key,
+                  m,
+                  dayPlan.meals.filter((_, j) => j !== k),
+                  dayPlan.dayType,
+                  week.types.flatMap((t, ti) =>
+                    t.meals
+                      .filter((_, j) => !(ti === day.type && j === k))
+                      .map((meal) => ({ meal, times: timesOf(ti) })),
+                  ),
+                  timesOf(day.type),
+                  (meal, shopping) => {
+                    // The typical day changes for every date that follows it.
+                    const dates = week.days.filter((d) => d.type === day.type).map((d) => `${d.date}|${m.slot}`);
+                    return {
+                      ...plan!,
+                      shopping,
+                      week: {
+                        ...week,
+                        types: week.types.map((t, ti) =>
+                          ti === day.type ? { ...t, meals: t.meals.map((x, j) => (j === k ? meal : x)) } : t,
+                        ),
+                        logged: week.logged.filter((l) => !dates.includes(l)),
+                      },
+                    };
+                  },
+                )
+              }
               {...cardProps}
             />
           );
@@ -306,6 +390,19 @@ export function PlannerPage({
             meal={m}
             logged={!!m.logged}
             onLogged={() => setPlan({ ...plan, meals: plan.meals.map((x, j) => (j === i ? { ...x, logged: true } : x)) })}
+            replacing={replacing === `meal-${i}`}
+            onReplace={() => {
+              const others = plan.meals.filter((_, j) => j !== i);
+              replaceMeal(
+                `meal-${i}`,
+                m,
+                others,
+                plan.dayType,
+                others.map((meal) => ({ meal, times: 1 })),
+                1,
+                (meal, shopping) => ({ ...plan, shopping, meals: plan.meals.map((x, j) => (j === i ? meal : x)) }),
+              );
+            }}
             {...cardProps}
           />
         ))}
