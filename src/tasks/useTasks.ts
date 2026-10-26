@@ -135,9 +135,12 @@ export function useTasks() {
       return task;
     });
 
-  const update = (task: CuTask, patch: { due?: number | null; priority?: Priority | null }) =>
+  const update = (task: CuTask, patch: { due?: number | null; priority?: Priority | null; estimate?: number | null }) =>
     run(async () => {
-      put({ ...task, due: patch.due === null ? undefined : (patch.due ?? task.due) });
+      // null removes a value, undefined keeps it.
+      const pick = <K extends "due" | "priority" | "estimate">(k: K) =>
+        (patch[k] === null ? undefined : (patch[k] ?? task[k])) as CuTask[K];
+      put({ ...task, due: pick("due"), priority: pick("priority"), estimate: pick("estimate") });
       const { task: updated } = await call<{ task: CuTask }>({ action: "update", taskId: task.id, ...patch });
       put(updated);
       return updated;

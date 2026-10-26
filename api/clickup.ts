@@ -69,6 +69,7 @@ interface RawTask {
   space: { id: string };
   url: string;
   date_updated: string;
+  time_estimate?: number | null;
 }
 
 const toTask = (t: RawTask): CuTask => ({
@@ -86,6 +87,7 @@ const toTask = (t: RawTask): CuTask => ({
   spaceId: t.space.id,
   url: t.url,
   updated: Number(t.date_updated),
+  estimate: t.time_estimate ?? undefined,
 });
 
 /** Every open task of the workspace, subtasks included (up to 1000). */
@@ -141,6 +143,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     parent?: string;
     start?: number;
     duration?: number;
+    /** Time estimate in ms, null to remove it. */
+    estimate?: number | null;
   };
 
   try {
@@ -173,6 +177,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (body.name) patch.name = body.name;
         if (body.due !== undefined) Object.assign(patch, { due_date: body.due, due_date_time: false });
         if (body.priority !== undefined) patch.priority = body.priority ? PRIORITY[body.priority] : null;
+        if (body.estimate !== undefined) patch.time_estimate = body.estimate;
         const task = await cu<RawTask>(`/task/${body.taskId}`, { method: "PUT", body: patch });
         return res.json({ task: toTask(task) });
       }

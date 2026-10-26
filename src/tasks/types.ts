@@ -30,6 +30,8 @@ export interface CuTask {
   spaceId: string;
   url: string;
   updated: number;
+  /** Time estimate, in ms. */
+  estimate?: number;
 }
 
 export type Domain = "pro" | "perso";

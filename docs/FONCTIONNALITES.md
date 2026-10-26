@@ -92,6 +92,17 @@ Reliée à ClickUp : les tâches viennent de ClickUp et chaque changement y est 
 | Compteur de tâches faites aujourd'hui et série de jours | ✅ |
 | Filtre Tout / Pro / Perso | ✅ |
 
+### Onglet Semaine (rituel de planification)
+| Fonctionnalité | Statut |
+|---|---|
+| Rituel guidé en 5 étapes : vider sa tête, choisir, estimer, temps dispo, plan | ✅ |
+| Tri urgent / important (matrice d'Eisenhower), enregistré comme priorité dans ClickUp | ✅ |
+| Estimation du temps de chaque tâche (enregistrée dans ClickUp), marge TDAH de 50 % | ✅ |
+| Heures disponibles par jour, 70 % planifiés pour garder de la marge, jauge « ce qui tient » | ✅ |
+| Plan de la semaine par l'IA (priorités, échéances, règle 1-3-5, énergie) avec conseils et tâches mises de côté | 🧪 |
+| Application du plan : chaque tâche reçoit son jour comme échéance dans ClickUp | ✅ |
+| Aujourd'hui : temps prévu face au temps possible, alerte si c'est trop | ✅ |
+
 ### Onglet Projets
 | Fonctionnalité | Statut |
 |---|---|

@@ -3,6 +3,8 @@ import { shiftDate, today } from "../lib/storage";
 import { CaptureBox, DomainFilter, Gate, SyncLine, TaskRow } from "./parts";
 import { priorityRank, type CuTask } from "./types";
 import { dayOf, streak, useTasksState } from "./useTasks";
+import { usePersisted } from "../nutrition/useNutrition";
+import { BUFFER, DEFAULT_HOURS, DEFAULT_MIN, estimateMin, FILL, fmtMin, weekday } from "./week";
 
 const byPriority = (a: CuTask, b: CuTask) =>
   priorityRank(a.priority) - priorityRank(b.priority) || (a.due ?? 0) - (b.due ?? 0);
@@ -41,6 +43,10 @@ export function TodayPage() {
   const undated = open.filter((x) => !x.due).sort((a, b) => priorityRank(a.priority) - priorityRank(b.priority) || b.updated - a.updated);
   const doneToday = t.doneDays[d] ?? 0;
   const days = streak(t.doneDays);
+  const [hours] = usePersisted<number[]>("week-hours", DEFAULT_HOURS);
+  const planned = [...top.filter((x) => !x.closed), ...late, ...todays];
+  const needed = planned.reduce((s, x) => s + (estimateMin(x) ?? DEFAULT_MIN), 0) * BUFFER;
+  const possible = (hours[weekday(d)] ?? 0) * 60 * FILL;
 
   return (
     <section className="stack">
@@ -51,6 +57,12 @@ export function TodayPage() {
           <strong>{doneToday}</strong> tâche{doneToday > 1 ? "s" : ""} faite{doneToday > 1 ? "s" : ""} aujourd'hui
           {days > 0 && <> · série de <strong>{days}</strong> jour{days > 1 ? "s" : ""} 🔥</>}
         </p>
+        {planned.length > 0 && (
+          <p className={needed > possible ? "small late" : "small muted"}>
+            Prévu aujourd'hui : {fmtMin(needed)} avec la marge, pour {fmtMin(possible)} possibles.
+            {needed > possible && " C'est trop : garde ton top 3 et repousse le reste."}
+          </p>
+        )}
         <CaptureBox />
 
         <div className="card stack tight">

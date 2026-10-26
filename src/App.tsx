@@ -11,6 +11,7 @@ import { SportPage } from "./sport/SportPage";
 import { NowPage } from "./tasks/NowPage";
 import { ProjectsPage } from "./tasks/ProjectsPage";
 import { TodayPage } from "./tasks/TodayPage";
+import { WeekPage } from "./tasks/WeekPage";
 import { TasksContext, useTasks } from "./tasks/useTasks";
 
 type Nutrition = ReturnType<typeof useNutrition>;
@@ -51,6 +52,7 @@ const SECTIONS: { id: string; label: string; icon: string; tabs: Tab[] }[] = [
     tabs: [
       { id: "now", label: "Maintenant", Page: NowPage },
       { id: "today", label: "Aujourd'hui", Page: TodayPage },
+      { id: "week", label: "Semaine", Page: WeekPage },
       { id: "projects", label: "Projets", Page: ProjectsPage },
     ],
   },

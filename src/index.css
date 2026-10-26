@@ -179,3 +179,23 @@ button.big { padding: 18px; font-size: 1.15rem; }
 .timer-done { font-size: 1.3rem; font-weight: 700; margin: 0; }
 .cheer { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--ok); color: var(--accent-ink); font-weight: 700; }
 .list-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: none; padding: 10px 0; text-align: left; font-weight: 400; border-top: 1px solid var(--line); border-radius: 0; }
+.stepper { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.stepper button { width: 100%; background: none; padding: 4px 0; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--muted); font-weight: 400; }
+.step-n { width: 1.8rem; height: 1.8rem; border-radius: 50%; display: grid; place-items: center; background: var(--soft); font-weight: 700; }
+.step-label { font-size: 0.72rem; }
+.stepper button.past .step-n { background: var(--ok); color: var(--accent-ink); }
+.stepper button[aria-current="step"] { color: var(--accent); font-weight: 700; }
+.stepper button[aria-current="step"] .step-n { background: var(--accent); color: var(--accent-ink); }
+.triage-row { display: flex; flex-direction: column; gap: 6px; padding: 8px 0; border-top: 1px solid var(--line); }
+.card > .triage-row:first-child { border-top: 0; }
+.quadrants { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.quadrant { display: flex; flex-direction: column; padding: 10px; border-radius: 14px; background: var(--surface); border: 2px solid var(--line); }
+.quadrant strong { font-size: 1.4rem; }
+.quadrant.do { border-color: var(--error); }
+.quadrant.plan { border-color: var(--accent); }
+.quadrant.batch { border-color: #d97706; }
+.bar { height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.bar-fill { height: 100%; background: var(--ok); border-radius: 99px; }
+.bar-fill.over { background: var(--error); }
+.day-name { text-transform: capitalize; }
+.hours { min-width: 3.5rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
