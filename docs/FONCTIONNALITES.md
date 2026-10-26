@@ -58,11 +58,18 @@ Dernière mise à jour : 26/10/2026
 | Calcul automatique de mes besoins et de mes apports par catégorie, avec la grille de la semaine | 📋 |
 | Objectifs journaliers (calories, protéines, glucides, lipides) utilisés par le graphique | ✅ |
 
-### Bilan (écran à venir)
+## Bilan
+
+### Onglet Jour
+| Fonctionnalité | Statut |
+|---|---|
+| Bilan quotidien : apports du jour face aux objectifs, repas non notés, séances et calories dépensées | ✅ |
+| Avis du coach sur la journée (réussi, à ajuster, une action pour demain), croisant nutrition et sport, gardé par jour | 🧪 |
+
+### À venir
 | Fonctionnalité | Statut |
 |---|---|
 | Bilan de la semaine : régularité, repas sautés, hydratation | 📋 |
-| Lien avec l'énergie et le sport | 📋 |
 
 ## Tâches
 Section présente dans le menu, avec la liste de ce qui arrive.
@@ -105,7 +112,7 @@ Section présente dans le menu, avec la liste de ce qui arrive.
 | Fonctionnalité | Statut |
 |---|---|
 | App web installable sur téléphone (PWA) | ✅ |
-| Menu latéral pour passer d'une section à l'autre (Nutrition, Sport, Tâches), chaque section avec son propre menu en bas | ✅ |
+| Menu latéral pour passer d'une section à l'autre (Nutrition, Sport, Bilan, Tâches), chaque section avec son propre menu en bas | ✅ |
 | Retour sur la dernière section et le dernier onglet ouverts | ✅ |
 | Base de connaissances : lecture des .md du dossier Google Drive « TDA Fighter - Nutrition » | 🧪 |
 | Bascule automatique sur un autre modèle d'IA si une question est refusée | 🧪 |

@@ -155,3 +155,4 @@ textarea { padding: 12px; border-radius: 12px; border: 2px solid var(--line); ba
   .tabs { left: 260px; }
 }
 .pill.recent { margin-left: 6px; color: var(--accent); vertical-align: 2px; }
+.m0 { margin: 0; }

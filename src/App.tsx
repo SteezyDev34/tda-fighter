@@ -5,6 +5,7 @@ import { JournalPage } from "./nutrition/JournalPage";
 import { PlannerPage } from "./nutrition/PlannerPage";
 import { ProfilePage } from "./nutrition/ProfilePage";
 import { useNutrition } from "./nutrition/useNutrition";
+import { ReportPage } from "./report/ReportPage";
 import { ExercisesPage } from "./sport/ExercisesPage";
 import { SportPage } from "./sport/SportPage";
 import { TasksPage } from "./tasks/TasksPage";
@@ -33,6 +34,12 @@ const SECTIONS: { id: string; label: string; icon: string; tabs: Tab[] }[] = [
       { id: "sessions", label: "Séances", Page: SportPage },
       { id: "exercises", label: "Exercices", Page: ExercisesPage },
     ],
+  },
+  {
+    id: "report",
+    label: "Bilan",
+    icon: "📊",
+    tabs: [{ id: "day", label: "Jour", Page: ReportPage }],
   },
   {
     id: "tasks",
