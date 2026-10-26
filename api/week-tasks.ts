@@ -39,8 +39,10 @@ Dans "days", un élément par jour reçu, dans l'ordre, avec les tâches dans l'
 /** Builds the week's plan from the triaged tasks and the hours available each day. */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).send("POST uniquement");
-  const { today, days, tasks } = req.body as {
+  const { today, days, tasks, goals } = req.body as {
     today: string;
+    /** What some projects should reach this week. */
+    goals?: { project: string; goal: string }[];
     days: { date: string; label: string; hours: number }[];
     tasks: PlanTask[];
   };
@@ -63,7 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           content: `Nous sommes le ${today}. Mes disponibilités pour les tâches :
 ${days.map((d) => `- ${d.date} (${d.label}) : ${d.hours} h`).join("\n")}
 
-Mes tâches triées :
+${goals?.length ? `Mes objectifs de la semaine par projet (à servir en priorité) :\n${goals.map((g) => `- ${g.project} : ${g.goal}`).join("\n")}\n\n` : ""}Mes tâches triées :
 ${tasks.map(describe).join("\n")}`,
         },
       ],

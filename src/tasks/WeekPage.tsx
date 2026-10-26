@@ -36,9 +36,11 @@ interface WeekState {
   picked: Record<string, Triage>;
   plan?: Plan;
   applied?: boolean;
+  /** What each project (ClickUp list) should reach this week. */
+  goals?: Record<string, string>;
 }
 
-const STEPS = ["Vider", "Choisir", "Estimer", "Temps dispo", "Plan"];
+const STEPS = ["Vider", "Projets", "Prioriser", "Estimer", "Temps dispo", "Plan"];
 
 const load = (tasks: CuTask[]) => tasks.reduce((sum, t) => sum + (estimateMin(t) ?? DEFAULT_MIN), 0) * BUFFER;
 
@@ -64,6 +66,8 @@ export function WeekPage() {
   const week: WeekState = stored && stored.start === days[0] ? stored : { start: days[0], step: 0, picked: {} };
   const set = (patch: Partial<WeekState>) => setWeek({ ...week, ...patch });
   const [showAll, setShowAll] = useState(false);
+  const [projectIdx, setProjectIdx] = useState(0);
+  const [newTask, setNewTask] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -78,6 +82,25 @@ export function WeekPage() {
     (x.due && dayOf(x.due) <= shiftDate(last, 7)) || x.priority === "urgent" || x.priority === "high" || !!week.picked[x.id];
   const candidates = open.filter(relevant);
   const others = open.filter((x) => !relevant(x));
+  // Projects are ClickUp lists, the most pressing and busiest first.
+  const projects = [...new Set(open.map((x) => x.listId))]
+    .map((id) => {
+      const tasks = open.filter((x) => x.listId === id).sort((a, b) => (a.due ?? Infinity) - (b.due ?? Infinity));
+      const x = tasks[0];
+      const space = t.spaces.find((s) => s.id === x.spaceId)?.name ?? "";
+      return {
+        id,
+        // A list just called "List" takes its folder's name.
+        name: x.folderName && /^list[e]?$/i.test(x.listName) ? x.folderName : /^list[e]?$/i.test(x.listName) ? space : x.listName,
+        path: [space, x.folderName, x.listName].filter(Boolean).join(" › "),
+        spaceId: x.spaceId,
+        tasks,
+        pressing: tasks.filter(relevant).length,
+      };
+    })
+    .sort((a, b) => b.pressing - a.pressing || b.tasks.length - a.tasks.length);
+  const project = projects[Math.min(projectIdx, projects.length - 1)];
+  const isLast = !!project && projects.indexOf(project) === projects.length - 1;
   const capacityOf = (d: string) => (hours[weekday(d)] ?? 0) * 60 * FILL;
   const totalCapacity = days.reduce((s, d) => s + capacityOf(d), 0);
 
@@ -98,7 +121,7 @@ export function WeekPage() {
   };
 
   const goTo = async (step: number) => {
-    if (week.step === 1 && step > 1) await saveTriage();
+    if (week.step === 2 && step > 2) await saveTriage();
     set({ step });
   };
 
@@ -112,6 +135,9 @@ export function WeekPage() {
         body: JSON.stringify({
           today: today(),
           days: days.map((d) => ({ date: d, label: dayName(d), hours: hours[weekday(d)] ?? 0 })),
+          goals: projects
+            .filter((p) => week.goals?.[p.id]?.trim())
+            .map((p) => ({ project: p.name, goal: week.goals![p.id] })),
           tasks: picked.map((x) => ({
             id: x.id,
             name: x.name,
@@ -184,16 +210,104 @@ export function WeekPage() {
               </p>
             </div>
             <CaptureBox />
-            {nav("C'est vidé, on trie")}
+            {nav("C'est vidé, on passe aux projets")}
           </>
         )}
 
         {week.step === 1 && (
           <>
             <div className="card stack tight">
-              <h2>2. Choisir et prioriser</h2>
+              <h2>2. Projet par projet</h2>
               <p className="small">
-                Coche ce qui doit avancer cette semaine, puis dis si c'est <strong>important</strong> (ça compte pour tes objectifs) et{" "}
+                Un projet à la fois : fixe ce qu'il doit atteindre cette semaine, coche les tâches qui y mènent et ajoute celles qui manquent.
+                Un projet peut aussi attendre.
+              </p>
+            </div>
+            <DomainFilter />
+            {project ? (
+              <div className="card stack">
+                <div className="row between">
+                  <span className="label">
+                    Projet {projects.indexOf(project) + 1} / {projects.length}
+                  </span>
+                  <span className="pill">{t.domainOf(project.spaceId) === "pro" ? "Pro" : "Perso"}</span>
+                </div>
+                <h2>{project.name}</h2>
+                <p className="small muted">{project.path}</p>
+                <label className="stack tight">
+                  <span className="label">Objectif de la semaine</span>
+                  <input
+                    value={week.goals?.[project.id] ?? ""}
+                    onChange={(e) => set({ goals: { ...week.goals, [project.id]: e.target.value } })}
+                    placeholder="Ex. : envoyer le devis, finir la maquette"
+                  />
+                </label>
+                <span className="label">Tâches qui font avancer ce projet</span>
+                {project.tasks.map((x) => (
+                  <label key={x.id} className="check row">
+                    <input type="checkbox" checked={!!week.picked[x.id]} onChange={() => togglePick(x)} />
+                    <span className="stack tight">
+                      <strong>{x.name}</strong>
+                      {x.due && <span className="small muted">{dueLabel(x.due)}</span>}
+                    </span>
+                  </label>
+                ))}
+                <form
+                  className="row"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!newTask.trim()) return;
+                    const task = await t.create(project.id, newTask.trim());
+                    if (task) {
+                      setNewTask("");
+                      set({ picked: { ...week.picked, [task.id]: guessTriage(task) } });
+                    }
+                  }}
+                >
+                  <input value={newTask} onChange={(e) => setNewTask(e.target.value)} placeholder="Tâche qui manque à ce projet" aria-label="Nouvelle tâche du projet" />
+                  <button className="primary" disabled={!newTask.trim()} aria-label="Ajouter au projet">+</button>
+                </form>
+                <div className="row wrap">
+                  <button
+                    onClick={() => {
+                      const next = { ...week.picked };
+                      for (const x of project.tasks) delete next[x.id];
+                      set({ picked: next });
+                      if (isLast) goTo(2);
+                      else setProjectIdx(projects.indexOf(project) + 1);
+                    }}
+                  >
+                    Ce projet attend
+                  </button>
+                  <button className="primary grow" onClick={() => (isLast ? goTo(2) : setProjectIdx(projects.indexOf(project) + 1))}>
+                    {isLast ? "Tous les projets sont vus ›" : "Projet suivant ›"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="small muted">Aucun projet avec des tâches ouvertes.</p>
+            )}
+            <div className="chips" aria-label="Tous les projets">
+              {projects.map((p) => {
+                const n = p.tasks.filter((x) => week.picked[x.id]).length;
+                return (
+                  <button key={p.id} className="chip" aria-pressed={p === project} onClick={() => setProjectIdx(projects.indexOf(p))}>
+                    {p.name}
+                    {n ? ` · ${n}` : ""}
+                  </button>
+                );
+              })}
+            </div>
+            {nav(`Prioriser les ${picked.length} tâches choisies`, !picked.length)}
+          </>
+        )}
+
+        {week.step === 2 && (
+          <>
+            <div className="card stack tight">
+              <h2>3. Prioriser</h2>
+              <p className="small">
+                Vérifie ce qui doit avancer cette semaine, puis dis si c'est <strong>important</strong> (ça compte pour tes objectifs) et{" "}
                 <strong>urgent</strong> (il y a une échéance proche). Le tri est enregistré dans ClickUp comme priorité.
               </p>
             </div>
@@ -245,10 +359,10 @@ export function WeekPage() {
           </>
         )}
 
-        {week.step === 2 && (
+        {week.step === 3 && (
           <>
             <div className="card stack tight">
-              <h2>3. Estimer le temps</h2>
+              <h2>4. Estimer le temps</h2>
               <p className="small">
                 Combien de temps pour chaque tâche, si tout va bien ? L'app ajoute ensuite une marge de 50 % : avec le TDAH, on sous-estime
                 presque toujours. L'estimation est enregistrée dans ClickUp.
@@ -276,10 +390,10 @@ export function WeekPage() {
           </>
         )}
 
-        {week.step === 3 && (
+        {week.step === 4 && (
           <>
             <div className="card stack tight">
-              <h2>4. Ton temps disponible</h2>
+              <h2>5. Ton temps disponible</h2>
               <p className="small">
                 Combien d'heures pour tes tâches chaque jour, en dehors du sport, des repas, des rendez-vous et du repos ? Seuls 70 % sont
                 planifiés : le reste absorbe les imprévus.
@@ -314,11 +428,11 @@ export function WeekPage() {
           </>
         )}
 
-        {week.step === 4 && (
+        {week.step === 5 && (
           <>
             {!week.plan ? (
               <div className="card stack">
-                <h2>5. Ton plan de la semaine</h2>
+                <h2>6. Ton plan de la semaine</h2>
                 <p className="small">
                   L'IA répartit tes {picked.length} tâches sur tes jours : priorités d'abord, échéances respectées, tâches dures le matin et en
                   début de semaine, jamais plus que ton temps dispo.
@@ -386,7 +500,7 @@ export function WeekPage() {
               </>
             )}
             {error && <p className="error">{error}</p>}
-            <button onClick={() => goTo(3)}>Retour</button>
+            <button onClick={() => goTo(4)}>Retour</button>
           </>
         )}
         <SyncLine />
