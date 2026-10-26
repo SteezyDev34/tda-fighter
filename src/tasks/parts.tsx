@@ -102,7 +102,7 @@ export function TaskRow({ task, showList = true }: { task: CuTask; showList?: bo
         <span className="task-name">{task.name}</span>
         <span className="small muted">
           {[
-            showList && (task.folderName ? `${task.folderName} › ${task.listName}` : task.listName),
+            showList && t.pathOf(task),
             due && <span key="d" className={late ? "late" : undefined}>{due}</span>,
             prio && <span key="p" className={`prio ${task.priority}`}>{prio}</span>,
             subtasks.length > 0 && `${subtasks.filter((s) => s.closed).length}/${subtasks.length} étapes`,

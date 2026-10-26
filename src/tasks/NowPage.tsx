@@ -117,7 +117,7 @@ function Blocked({
       const res = await fetch("/api/task-steps", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: task.name, description: task.description, list: task.listName, existing }),
+        body: JSON.stringify({ name: task.name, description: task.description, list: t.pathOf(task), existing }),
       });
       if (!res.ok) throw new Error(await res.text());
       setSteps(((await res.json()) as { steps: string[] }).steps);
@@ -216,8 +216,7 @@ export function NowPage() {
               <span className="label">Ta seule mission</span>
               <h2 className="now-title">{task.name}</h2>
               <p className="small muted">
-                {task.folderName ? `${task.folderName} › ` : ""}
-                {task.listName}
+                {t.pathOf(task)}
                 {task.due ? ` · ${dueLabel(task.due)}` : ""}
                 {" · "}
                 {t.domainOf(task.spaceId) === "pro" ? "Pro" : "Perso"}

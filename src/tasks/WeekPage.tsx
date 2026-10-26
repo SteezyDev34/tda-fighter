@@ -141,7 +141,7 @@ export function WeekPage() {
           tasks: picked.map((x) => ({
             id: x.id,
             name: x.name,
-            list: x.folderName ? `${x.folderName} › ${x.listName}` : x.listName,
+            list: t.pathOf(x),
             domain: t.domainOf(x.spaceId),
             ...week.picked[x.id],
             estimate: estimateMin(x),
@@ -322,7 +322,7 @@ export function WeekPage() {
                       <span className="stack tight">
                         <strong>{x.name}</strong>
                         <span className="small muted">
-                          {x.listName}
+                          {t.pathOf(x)}
                           {x.due ? ` · ${dueLabel(x.due)}` : ""}
                         </span>
                       </span>

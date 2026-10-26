@@ -97,6 +97,12 @@ export function useTasks() {
 
   const perso = persoSpaces ?? spaces.filter((s) => /perso/i.test(s.name)).map((s) => s.id);
   const domainOf = (spaceId: string): Domain => (perso.includes(spaceId) ? "perso" : "pro");
+  /** "SPACE › Folder › List", without a list just called "List". */
+  const pathOf = (x: CuTask) => {
+    const space = spaces.find((s) => s.id === x.spaceId)?.name;
+    const list = /^list[e]?$/i.test(x.listName) && (space || x.folderName) ? undefined : x.listName;
+    return [space, x.folderName, list].filter(Boolean).join(" › ");
+  };
   const inFilter = (t: CuTask) => domainFilter === "all" || domainOf(t.spaceId) === domainFilter;
 
   const put = (task: CuTask) =>
@@ -170,6 +176,7 @@ export function useTasks() {
     perso,
     setPersoSpaces,
     domainOf,
+    pathOf,
     inFilter,
     domainFilter,
     setDomainFilter,
