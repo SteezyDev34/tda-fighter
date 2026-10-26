@@ -156,3 +156,26 @@ textarea { padding: 12px; border-radius: 12px; border: 2px solid var(--line); ba
 }
 .pill.recent { margin-left: 6px; color: var(--accent); vertical-align: 2px; }
 .m0 { margin: 0; }
+
+/* Tasks */
+.task-row { display: grid; grid-template-columns: 2.5rem 1fr 2.5rem; align-items: center; gap: 4px; border-top: 1px solid var(--line); padding: 4px 0; }
+.card > .task-row:first-of-type { border-top: 0; }
+.task-check { width: 1.9rem; height: 1.9rem; padding: 0; border-radius: 50%; border: 2px solid var(--muted); background: none; color: var(--accent-ink); }
+.task-check.checked { background: var(--ok); border-color: var(--ok); }
+.task-main { background: none; padding: 8px 0; text-align: left; display: flex; flex-direction: column; gap: 2px; font-weight: 400; min-width: 0; }
+.task-name { font-weight: 700; overflow-wrap: anywhere; }
+.task-row.done .task-name { text-decoration: line-through; color: var(--muted); }
+.task-star { background: none; padding: 0; font-size: 1.3rem; color: var(--muted); }
+.task-star.on { color: #f0a400; }
+.late { color: var(--error); }
+.prio.urgent { color: var(--error); font-weight: 700; }
+.prio.high { color: #d97706; font-weight: 700; }
+.now-card { border: 2px solid var(--accent); }
+.now-title { font-size: 1.6rem; line-height: 1.2; overflow-wrap: anywhere; }
+.next-step { margin: 0; padding: 10px 12px; border-radius: 12px; background: var(--soft); font-weight: 700; }
+.steps { list-style: none; margin: 0; padding: 0; }
+button.big { padding: 18px; font-size: 1.15rem; }
+.timer { font-size: 3.5rem; font-weight: 700; text-align: center; margin: 0; font-variant-numeric: tabular-nums; }
+.timer-done { font-size: 1.3rem; font-weight: 700; margin: 0; }
+.cheer { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--ok); color: var(--accent-ink); font-weight: 700; }
+.list-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: none; padding: 10px 0; text-align: left; font-weight: 400; border-top: 1px solid var(--line); border-radius: 0; }

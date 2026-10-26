@@ -72,16 +72,38 @@ Dernière mise à jour : 26/10/2026
 | Bilan de la semaine : régularité, repas sautés, hydratation | 📋 |
 
 ## Tâches
-Section présente dans le menu, avec la liste de ce qui arrive.
+Reliée à ClickUp : les tâches viennent de ClickUp et chaque changement y est enregistré. Il faut CLICKUP_TOKEN et TDAF_ACCESS_CODE dans Vercel.
 
+### Onglet Maintenant
 | Fonctionnalité | Statut |
 |---|---|
-| Écran « Une seule chose maintenant » | 🎨 |
-| Capture rapide d'une tâche | 🎨 |
-| Découpage d'une tâche en micro-étapes par l'IA | 🎨 |
-| Top 3 des priorités du jour (3 max) | 🎨 |
-| Minuteur focus avec bouton « Je bloque » | 🎨 |
-| Points d'XP, niveaux et séries | 🎨 |
+| Une seule tâche affichée : celle choisie, sinon le top 3, sinon la plus urgente | ✅ |
+| Prochaine micro-étape mise en avant, sous-tâches à cocher | ✅ |
+| Minuteur focus 5 / 15 / 25 min, temps enregistré dans ClickUp | ✅ |
+| Bouton « Je bloque » : découper en micro-étapes (IA, ajoutées en sous-tâches), juste 5 minutes, reporter à demain, passer à une autre | 🧪 |
+| Bouton « C'est fait » avec message d'encouragement et série | ✅ |
+
+### Onglet Aujourd'hui
+| Fonctionnalité | Statut |
+|---|---|
+| Capture rapide « Vider ma tête » (pro ou perso, pour aujourd'hui) envoyée dans ClickUp | ✅ |
+| Top 3 du jour (3 maximum) | ✅ |
+| Tâches en retard, pour aujourd'hui, cette semaine, sans date, plus tard | ✅ |
+| Compteur de tâches faites aujourd'hui et série de jours | ✅ |
+| Filtre Tout / Pro / Perso | ✅ |
+
+### Onglet Projets
+| Fonctionnalité | Statut |
+|---|---|
+| Espaces et listes ClickUp classés en pro et perso, avec le nombre de tâches ouvertes | ✅ |
+| Ouvrir une liste et y ajouter des tâches | ✅ |
+| Réglages : espace pro ou perso, liste qui reçoit les captures | ✅ |
+
+### À venir
+| Fonctionnalité | Statut |
+|---|---|
+| Points d'XP et niveaux | 📋 |
+| Rappels et notifications | 📋 |
 
 ## Sport
 
