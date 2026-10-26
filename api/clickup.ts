@@ -124,8 +124,15 @@ const PRIORITY = { urgent: 1, high: 2, normal: 3, low: 4 } as const;
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") return res.status(405).send("POST uniquement");
-  if (!process.env.CLICKUP_TOKEN || !process.env.TDAF_ACCESS_CODE) {
-    return res.status(503).send("ClickUp n'est pas encore configuré (CLICKUP_TOKEN et TDAF_ACCESS_CODE dans Vercel).");
+  // Names only, never values: says which variable this deployment doesn't see.
+  const missing = ["CLICKUP_TOKEN", "TDAF_ACCESS_CODE"].filter((k) => !process.env[k]?.trim());
+  if (missing.length) {
+    return res
+      .status(503)
+      .send(
+        `Ce déploiement ne voit pas ${missing.join(" ni ")} (env : ${process.env.VERCEL_ENV ?? "?"}). ` +
+          "Vérifie dans Vercel que la variable est cochée pour Production, puis redéploie.",
+      );
   }
   if (req.headers["x-tdaf-code"] !== process.env.TDAF_ACCESS_CODE) {
     return res.status(401).send("Code d'accès incorrect.");
