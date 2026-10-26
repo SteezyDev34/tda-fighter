@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Agenda } from "../lib/Agenda";
 import { today } from "../lib/storage";
 import { usePersisted } from "../nutrition/useNutrition";
-import { ExerciseLibrary } from "./ExerciseLibrary";
 import { SessionEditor } from "./SessionEditor";
 import {
   INTENSITIES,
@@ -71,7 +70,6 @@ export function SportPage() {
   const [sessions, setSessions] = usePersisted<SportSession[]>("sport-sessions", []);
   const [date, setDate] = useState(today());
   const [editing, setEditing] = useState<{ session: SportSession; isNew: boolean } | null>(null);
-  const [library, setLibrary] = useState(false);
 
   if (editing) {
     return (
@@ -96,25 +94,13 @@ export function SportPage() {
     );
   }
 
-  if (library) {
-    return (
-      <section className="stack">
-        <div className="row between">
-          <h1>Exercices</h1>
-          <button className="link" onClick={() => setLibrary(false)}>Fermer</button>
-        </div>
-        <ExerciseLibrary />
-      </section>
-    );
-  }
-
   const ofDay = sessions
     .filter((s) => s.date === date)
     .sort((a, b) => (a.time ?? "").localeCompare(b.time ?? ""));
 
   return (
     <section className="stack">
-      <h1>Sport</h1>
+      <h1>Séances</h1>
       <Agenda date={date} marks={sessionMarks(sessions)} onChange={setDate} allowFuture />
 
       <div className="card stack">
@@ -133,8 +119,6 @@ export function SportPage() {
       ) : (
         ofDay.map((s) => <SessionCard key={s.id} s={s} onEdit={() => setEditing({ session: s, isNew: false })} />)
       )}
-
-      <button className="link start" onClick={() => setLibrary(true)}>Parcourir la bibliothèque d'exercices</button>
     </section>
   );
 }

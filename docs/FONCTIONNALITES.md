@@ -65,6 +65,8 @@ Dernière mise à jour : 26/10/2026
 | Lien avec l'énergie et le sport | 📋 |
 
 ## Tâches
+Section présente dans le menu, avec la liste de ce qui arrive.
+
 | Fonctionnalité | Statut |
 |---|---|
 | Écran « Une seule chose maintenant » | 🎨 |
@@ -76,7 +78,7 @@ Dernière mise à jour : 26/10/2026
 
 ## Sport
 
-### Écran Sport
+### Onglets Séances et Exercices
 | Fonctionnalité | Statut |
 |---|---|
 | Calendrier des séances (passées et à venir), avec le type de séance sur chaque jour | ✅ |
@@ -100,6 +102,8 @@ Dernière mise à jour : 26/10/2026
 | Fonctionnalité | Statut |
 |---|---|
 | App web installable sur téléphone (PWA) | ✅ |
+| Menu latéral pour passer d'une section à l'autre (Nutrition, Sport, Tâches), chaque section avec son propre menu en bas | ✅ |
+| Retour sur la dernière section et le dernier onglet ouverts | ✅ |
 | Base de connaissances : lecture des .md du dossier Google Drive « TDA Fighter - Nutrition » | 🧪 |
 | Bascule automatique sur un autre modèle d'IA si une question est refusée | 🧪 |
 | Comptes et synchronisation entre appareils | 📋 |
