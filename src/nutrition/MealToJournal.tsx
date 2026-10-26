@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { today } from "../lib/storage";
 import { matchFoods, scale, searchOff, type Food } from "./foods";
-import { slotLabel, type JournalEntry, type SuggestedMeal } from "./types";
+import { MEAL_SLOTS, type JournalEntry, type LoggedMeal, type MealSlot, type SuggestedMeal } from "./types";
 
 interface Row {
   item: string;
@@ -18,6 +18,8 @@ interface Props {
   date?: string;
   customFoods: Food[];
   onAdd: (entries: Omit<JournalEntry, "id" | "createdAt">[]) => void;
+  /** Keeps the recipe and explanation with the journal lines. */
+  onKeepMeal: (meal: LoggedMeal) => void;
   onUseFood: (food: Food, grams: number) => void;
   onDone: () => void;
   onCancel: () => void;
@@ -30,8 +32,10 @@ const fmt = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 0 
  * so the nutrients come from the database, never from the AI. The user checks the
  * product and the grams before adding.
  */
-export function MealToJournal({ meal, date, customFoods, onAdd, onUseFood, onDone, onCancel }: Props) {
+export function MealToJournal({ meal, date: suggestedDate, customFoods, onKeepMeal, onAdd, onUseFood, onDone, onCancel }: Props) {
   const [rows, setRows] = useState<Row[] | null>(null);
+  const [date, setDate] = useState(suggestedDate ?? today());
+  const [slot, setSlot] = useState<MealSlot>(meal.slot);
 
   useEffect(() => {
     let stale = false;
@@ -70,10 +74,13 @@ export function MealToJournal({ meal, date, customFoods, onAdd, onUseFood, onDon
   const kcal = chosen.reduce((s, c) => s + scale(c.food.per100g, c.row.grams).kcal, 0);
 
   const add = () => {
+    const fromMeal = crypto.randomUUID();
+    onKeepMeal({ id: fromMeal, meal });
     onAdd(
       chosen.map(({ row, food }) => ({
-        date: date ?? today(),
-        slot: meal.slot,
+        date,
+        slot,
+        fromMeal,
         description: `${food.name} (${row.grams} g)`,
         nutrients: scale(food.per100g, row.grams),
         food: { id: food.id, grams: row.grams },
@@ -86,6 +93,19 @@ export function MealToJournal({ meal, date, customFoods, onAdd, onUseFood, onDon
   return (
     <div className="stack">
       <p className="small muted">Vérifie le produit et la quantité de chaque aliment, puis ajoute.</p>
+      <div className="row">
+        <input
+          type="date"
+          aria-label="Jour du journal"
+          value={date}
+          onChange={(e) => e.target.value && setDate(e.target.value)}
+        />
+        <select aria-label="Repas du journal" value={slot} onChange={(e) => setSlot(e.target.value as MealSlot)}>
+          {MEAL_SLOTS.map((s) => (
+            <option key={s.id} value={s.id}>{s.label}</option>
+          ))}
+        </select>
+      </div>
       {rows.map((r, i) => (
         <div key={i} className="entry stack tight">
           <label className="row">
@@ -129,7 +149,7 @@ export function MealToJournal({ meal, date, customFoods, onAdd, onUseFood, onDon
       ))}
       <div className="row">
         <button className="primary" disabled={!chosen.length} onClick={add}>
-          Ajouter {chosen.length} aliment{chosen.length > 1 ? "s" : ""} ({fmt(kcal)} kcal) · {slotLabel(meal.slot)}
+          Ajouter {chosen.length} aliment{chosen.length > 1 ? "s" : ""} ({fmt(kcal)} kcal)
         </button>
         <button onClick={onCancel}>Annuler</button>
       </div>

@@ -4,6 +4,7 @@ import type { Food } from "./foods";
 import {
   EMPTY_PROFILE,
   type JournalEntry,
+  type LoggedMeal,
   type MealPlan,
   type NutritionProfile,
   type RecentFood,
@@ -23,6 +24,7 @@ export function useNutrition() {
   const [savedMeals, setSavedMeals] = usePersisted<SavedMeal[]>("saved-meals", []);
   const [recentFoods, setRecentFoods] = usePersisted<RecentFood[]>("recent-foods", []);
   const [customFoods, setCustomFoods] = usePersisted<Food[]>("custom-foods", []);
+  const [loggedMeals, setLoggedMeals] = usePersisted<LoggedMeal[]>("logged-meals", []);
 
   // Profiles saved before targets existed get the default targets.
   const profile = { ...EMPTY_PROFILE, ...storedProfile };
@@ -53,6 +55,8 @@ export function useNutrition() {
     return created;
   };
 
+  const addLoggedMeal = (meal: LoggedMeal) => setLoggedMeals((m) => [meal, ...m]);
+
   const removeEntry = (id: string) => setJournal((j) => j.filter((e) => e.id !== id));
 
   const saveMeal = (name: string, entries: JournalEntry[]) =>
@@ -75,6 +79,8 @@ export function useNutrition() {
     rememberFood,
     customFoods,
     addCustomFood,
+    loggedMeals,
+    addLoggedMeal,
     savedMeals,
     saveMeal,
     deleteMeal,

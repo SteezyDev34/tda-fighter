@@ -20,6 +20,7 @@ Dernière mise à jour : 21/10/2026
 | Enregistrer un repas (plusieurs aliments) sous un nom et le retrouver dans la recherche « Mes repas » | ✅ |
 | Graphique des apports du jour comparés aux objectifs, mis à jour à chaque aliment noté | ✅ |
 | Détail par repas au survol ou au tap sur une barre du graphique | ✅ |
+| Un repas généré ajouté au journal garde son nom, ses apports, sa recette et l'explication de l'IA (bouton « Recette et explication ») | ✅ |
 | Agenda : revoir l'historique jour par jour (semaine, flèches, choix d'une date), avec les calories de chaque jour | ✅ |
 | Noter un aliment oublié sur un jour passé | ✅ |
 | Rappel doux si un repas n'est pas noté | 📋 |
@@ -34,7 +35,7 @@ Dernière mise à jour : 21/10/2026
 | Repas composés selon la méthode des apports (TP, BH, MM, E, BG) et les quantités de « 1 apport » des ressources, apports affichés sur chaque repas | 🧪 |
 | Liste de courses générée depuis les repas, regroupée par rayon, cochable | 🧪 |
 | Historique des plans générés (journée, repas, semaine) : une nouvelle génération n'efface plus l'ancienne, je peux rouvrir ou supprimer un plan | ✅ |
-| Bouton « Ajouter au journal » sur un repas généré : chaque ingrédient est retrouvé dans Open Food Facts, je vérifie le produit et les grammes, puis j'ajoute (et je peux le rajouter si je l'ai retiré) | ✅ |
+| Bouton « Ajouter au journal » sur un repas généré : chaque ingrédient est retrouvé dans Open Food Facts, je vérifie le produit et les grammes, je choisis le jour et le repas, puis j'ajoute (et je peux le rajouter si je l'ai retiré) | ✅ |
 | Remplacer un plat en un tap | 📋 |
 | Retirer de la liste ce que j'ai déjà à la maison | 📋 |
 

@@ -2,7 +2,15 @@ import { useState } from "react";
 import { shiftDate, today } from "../lib/storage";
 import type { Food } from "./foods";
 import { MealToJournal } from "./MealToJournal";
-import { MEAL_SLOTS, slotLabel, type JournalEntry, type MealPlan, type MealSlot, type SuggestedMeal } from "./types";
+import {
+  MEAL_SLOTS,
+  slotLabel,
+  type JournalEntry,
+  type LoggedMeal,
+  type MealPlan,
+  type MealSlot,
+  type SuggestedMeal,
+} from "./types";
 import { recentJournal, usePersisted, type NutritionState } from "./useNutrition";
 
 type Scope = "week" | "day" | MealSlot;
@@ -25,10 +33,11 @@ interface MealCardProps {
   onLogged: () => void;
   customFoods: Food[];
   addEntries: (entries: Omit<JournalEntry, "id" | "createdAt">[]) => void;
+  addLoggedMeal: (meal: LoggedMeal) => void;
   rememberFood: (food: Food, grams: number) => void;
 }
 
-function MealCard({ meal: m, date, logged, onLogged, customFoods, addEntries, rememberFood }: MealCardProps) {
+function MealCard({ meal: m, date, logged, onLogged, customFoods, addEntries, addLoggedMeal, rememberFood }: MealCardProps) {
   const [logging, setLogging] = useState(false);
   return (
     <article className="card stack">
@@ -49,6 +58,7 @@ function MealCard({ meal: m, date, logged, onLogged, customFoods, addEntries, re
           meal={m}
           date={date}
           customFoods={customFoods}
+          onKeepMeal={addLoggedMeal}
           onAdd={addEntries}
           onUseFood={rememberFood}
           onCancel={() => setLogging(false)}
@@ -75,7 +85,16 @@ const MAX_PLANS = 30;
 const planWhen = (iso?: string) =>
   iso ? new Date(iso).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
 
-export function PlannerPage({ journal, profile, plan, setPlan: setCurrent, addEntries, rememberFood, customFoods }: NutritionState) {
+export function PlannerPage({
+  journal,
+  profile,
+  plan,
+  setPlan: setCurrent,
+  addEntries,
+  addLoggedMeal,
+  rememberFood,
+  customFoods,
+}: NutritionState) {
   const [history, setHistory] = usePersisted<MealPlan[]>("plan-history", plan ? [{ ...plan, id: plan.id ?? "ancien", label: plan.label ?? "Plan précédent" }] : []);
   const [showHistory, setShowHistory] = useState(false);
   /** Changes to the open plan (ticked shopping, logged meals) are kept in the history too. */
@@ -147,7 +166,7 @@ export function PlannerPage({ journal, profile, plan, setPlan: setCurrent, addEn
   const week = plan?.week;
   const day = week?.days[selectedDay];
   const dayPlan = day ? week.types[day.type] : undefined;
-  const cardProps = { customFoods, addEntries, rememberFood };
+  const cardProps = { customFoods, addEntries, addLoggedMeal, rememberFood };
 
   return (
     <section className="stack">

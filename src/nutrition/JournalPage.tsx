@@ -3,7 +3,7 @@ import { today } from "../lib/storage";
 import { DailyIntake } from "./DailyIntake";
 import { JournalAgenda } from "./JournalAgenda";
 import { FoodPicker } from "./FoodPicker";
-import { MEAL_SLOTS, type JournalEntry, type MealSlot } from "./types";
+import { MEAL_SLOTS, type JournalEntry, type LoggedMeal, type MealSlot } from "./types";
 import type { NutritionState } from "./useNutrition";
 
 /** Guess the meal slot from the current hour so logging is one step. */
@@ -18,6 +18,36 @@ function currentSlot(): MealSlot {
 
 const macroLine = ({ nutrients: n }: JournalEntry) =>
   `${Math.round(n.kcal)} kcal · P ${Math.round(n.protein)} g · G ${Math.round(n.carbs)} g · L ${Math.round(n.fat)} g`;
+
+/** The generated meal a group of lines comes from, with the AI's recipe and explanation. */
+function GeneratedMeal({ logged }: { logged: LoggedMeal }) {
+  const [open, setOpen] = useState(false);
+  const m = logged.meal;
+  return (
+    <div className="stack tight">
+      <div className="row between">
+        <strong>{m.name}</strong>
+        <button className="link" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+          {open ? "Masquer" : "Recette et explication"}
+        </button>
+      </div>
+      {m.apports && <span className="pill ok start">{m.apports}</span>}
+      {open && (
+        <div className="stack tight small">
+          <p className="muted">{m.why}</p>
+          <ul>
+            {m.ingredients.map((ing, k) => (
+              <li key={k}>{ing.quantity} {ing.item}</li>
+            ))}
+          </ul>
+          <ol>
+            {m.steps.map((s, k) => <li key={k}>{s}</li>)}
+          </ol>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** Saves the foods of one meal under a name, to log them again in one tap. */
 function SaveMeal({ entries, onSave }: { entries: JournalEntry[]; onSave: (name: string) => void }) {
@@ -58,6 +88,7 @@ export function JournalPage({
   rememberFood,
   customFoods,
   addCustomFood,
+  loggedMeals,
   savedMeals,
   saveMeal,
   profile,
@@ -100,15 +131,25 @@ export function JournalPage({
                 {entries.length ? "Noté" : "À noter"}
               </span>
             </div>
-            {entries.map((e) => (
-              <div key={e.id} className="entry stack tight">
-                <div className="row between">
-                  <span>{e.description}</span>
-                  <button className="link" onClick={() => removeEntry(e.id)}>Retirer</button>
+            {[...new Set(entries.map((e) => e.fromMeal ?? ""))].map((group) => {
+              const logged = group ? loggedMeals.find((m) => m.id === group) : undefined;
+              return (
+                <div key={group || "free"} className="stack tight">
+                  {logged && <GeneratedMeal logged={logged} />}
+                  {entries
+                    .filter((e) => (e.fromMeal ?? "") === group)
+                    .map((e) => (
+                      <div key={e.id} className="entry stack tight">
+                        <div className="row between">
+                          <span>{e.description}</span>
+                          <button className="link" onClick={() => removeEntry(e.id)}>Retirer</button>
+                        </div>
+                        <span className="small muted">{macroLine(e)}</span>
+                      </div>
+                    ))}
                 </div>
-                <span className="small muted">{macroLine(e)}</span>
-              </div>
-            ))}
+              );
+            })}
             <SaveMeal entries={entries} onSave={(name) => saveMeal(name, entries)} />
           </div>
         );

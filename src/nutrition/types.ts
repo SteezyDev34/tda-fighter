@@ -38,6 +38,14 @@ export interface JournalEntry {
   nutrients: Nutrients;
   /** The database food this line comes from. */
   food?: { id: string; grams: number };
+  /** The generated meal this line was added from (id in LoggedMeal). */
+  fromMeal?: string;
+}
+
+/** A generated meal added to the journal: keeps the AI's recipe, explanation and apports. */
+export interface LoggedMeal {
+  id: string;
+  meal: SuggestedMeal;
 }
 
 /** A food the user already logged, kept to find it again first. */
