@@ -14,7 +14,7 @@ class HttpError extends Error {
 async function cu<T>(path: string, init?: { method?: string; body?: unknown }): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: init?.method ?? "GET",
-    headers: { Authorization: process.env.CLICKUP_TOKEN!, "Content-Type": "application/json" },
+    headers: { Authorization: process.env.CLICKUP_TOKEN!.trim(), "Content-Type": "application/json" },
     body: init?.body ? JSON.stringify(init.body) : undefined,
   });
   if (!res.ok) throw new HttpError(res.status === 401 ? 502 : res.status, `ClickUp ${res.status} : ${await res.text()}`);
@@ -134,7 +134,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           "Vérifie dans Vercel que la variable est cochée pour Production, puis redéploie.",
       );
   }
-  if (req.headers["x-tdaf-code"] !== process.env.TDAF_ACCESS_CODE) {
+  if (String(req.headers["x-tdaf-code"] ?? "").trim() !== process.env.TDAF_ACCESS_CODE!.trim()) {
     return res.status(401).send("Code d'accès incorrect.");
   }
 
