@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { DomainFilter, Gate, SyncLine, TaskRow } from "./parts";
 import { priorityRank, type CuList, type CuSpace, type Domain } from "./types";
+import { colorHex, GCAL_COLORS } from "./colors";
 import { useTasksState } from "./useTasks";
 
 function ListView({ space, list, onBack }: { space: CuSpace; list: CuList; onBack: () => void }) {
@@ -101,13 +102,22 @@ export function ProjectsPage() {
                 <div key={s.id} className="card stack tight">
                   <h2>{s.name}</h2>
                   {s.lists.map((l) => (
-                    <button key={l.id} className="list-row" onClick={() => setOpen({ space: s, list: l })}>
-                      <span>
-                        {l.folder && <span className="muted">{l.folder} › </span>}
-                        {l.name}
-                      </span>
-                      <span className="pill">{count(l.id)}</span>
-                    </button>
+                    <div key={l.id} className="list-line">
+                      <button
+                        className="swatch"
+                        style={{ background: colorHex(t.colorOf(l.id)) }}
+                        aria-label={`Couleur dans l'agenda : ${GCAL_COLORS.find((c) => c.id === t.colorOf(l.id))?.name}. Changer`}
+                        title="Couleur dans Google Agenda (toucher pour changer)"
+                        onClick={() => t.nextColor(l.id)}
+                      />
+                      <button className="list-row" onClick={() => setOpen({ space: s, list: l })}>
+                        <span>
+                          {l.folder && <span className="muted">{l.folder} › </span>}
+                          {l.name}
+                        </span>
+                        <span className="pill">{count(l.id)}</span>
+                      </button>
+                    </div>
                   ))}
                 </div>
               ))}

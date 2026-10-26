@@ -199,3 +199,7 @@ button.big { padding: 18px; font-size: 1.15rem; }
 .bar-fill.over { background: var(--error); }
 .day-name { text-transform: capitalize; }
 .hours { min-width: 3.5rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+.list-line { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); }
+.list-line .list-row { flex: 1; border-top: 0; }
+.swatch { width: 1.4rem; height: 1.4rem; padding: 0; border-radius: 50%; flex: none; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--line); }
+.dot { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }

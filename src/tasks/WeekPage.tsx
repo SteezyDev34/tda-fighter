@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { shiftDate, today } from "../lib/storage";
 import { usePersisted } from "../nutrition/useNutrition";
+import { colorHex } from "./colors";
 import { CaptureBox, DomainFilter, Gate, SyncLine } from "./parts";
 import type { CuTask } from "./types";
 import { dayOf, dueLabel, msOf, useTasksState } from "./useTasks";
@@ -68,6 +69,9 @@ export function WeekPage() {
   const set = (patch: Partial<WeekState>) => setWeek({ ...week, ...patch });
   const [showAll, setShowAll] = useState(false);
   const [projectIdx, setProjectIdx] = useState(0);
+  const [workWindow, setWorkWindow] = usePersisted("work-window", { start: "09:00", end: "18:00" });
+  const [calBusy, setCalBusy] = useState(false);
+  const [calResult, setCalResult] = useState("");
   const [newTask, setNewTask] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -177,6 +181,47 @@ export function WeekPage() {
     }
     setBusy(false);
     set({ applied: true });
+  };
+
+  /** Sends the plan to Google Calendar as work blocks. */
+  const toCalendar = async () => {
+    if (!week.plan) return;
+    setCalBusy(true);
+    setCalResult("");
+    try {
+      const blocks = week.plan.days.map((d) => ({
+        date: d.date,
+        from: new Date(`${d.date}T${workWindow.start}:00`).toISOString(),
+        to: new Date(`${d.date}T${workWindow.end}:00`).toISOString(),
+        tasks: d.taskIds
+          .map(byId)
+          .filter((x): x is CuTask => !!x && !x.closed)
+          .map((x) => ({
+            id: x.id,
+            name: x.name,
+            minutes: Math.round((estimateMin(x) ?? DEFAULT_MIN) * BUFFER),
+            colorId: t.colorOf(x.listId),
+            project: t.pathOf(x),
+            url: x.url,
+          })),
+      }));
+      const res = await fetch("/api/calendar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-tdaf-code": t.code },
+        body: JSON.stringify({ action: "sync", days: blocks, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const r = (await res.json()) as { created: number; unplaced: string[] };
+      const left = r.unplaced.map((id) => byId(id)?.name).filter(Boolean);
+      setCalResult(
+        `✓ ${r.created} bloc${r.created > 1 ? "s" : ""} dans ton agenda.` +
+          (left.length ? ` Pas de créneau libre pour : ${left.join(", ")}.` : ""),
+      );
+    } catch (e) {
+      setCalResult((e as Error).message);
+    } finally {
+      setCalBusy(false);
+    }
   };
 
   const stepper = (
@@ -423,6 +468,19 @@ export function WeekPage() {
               })}
             </div>
             <div className="card stack tight">
+              <span className="label">Mes heures de travail (pour placer les blocs dans l'agenda)</span>
+              <div className="row">
+                <label className="grow">
+                  <span className="small muted">De</span>
+                  <input type="time" value={workWindow.start} onChange={(e) => e.target.value && setWorkWindow({ ...workWindow, start: e.target.value })} />
+                </label>
+                <label className="grow">
+                  <span className="small muted">À</span>
+                  <input type="time" value={workWindow.end} onChange={(e) => e.target.value && setWorkWindow({ ...workWindow, end: e.target.value })} />
+                </label>
+              </div>
+            </div>
+            <div className="card stack tight">
               <span className="label">Ce qui tient dans ta semaine</span>
               <Meter used={load(picked)} capacity={totalCapacity} />
               <p className="small">
@@ -466,6 +524,7 @@ export function WeekPage() {
                         <ol className="session-exercises">
                           {ts.map((x) => (
                             <li key={x.id}>
+                              <span className="dot" style={{ background: colorHex(t.colorOf(x.listId)) }} aria-hidden="true" />
                               {x.name} <span className="small muted">· {fmtMin(estimateMin(x) ?? DEFAULT_MIN)}</span>
                             </li>
                           ))}
@@ -503,6 +562,18 @@ export function WeekPage() {
                     {busy ? "Mise à jour de ClickUp…" : "Appliquer : mettre ces dates dans ClickUp"}
                   </button>
                 )}
+                <div className="card stack tight">
+                  <h2>📅 Google Agenda</h2>
+                  <p className="small">
+                    Chaque tâche devient un bloc de travail dans ton agenda, de la durée estimée avec la marge, dans tes créneaux libres entre{" "}
+                    {workWindow.start.replace(":", " h ")} et {workWindow.end.replace(":", " h ")}. Une couleur par projet (à changer dans Projets).
+                    Refaire l'envoi remplace les anciens blocs, sans toucher à tes autres rendez-vous.
+                  </p>
+                  <button className={week.applied ? "primary" : undefined} onClick={toCalendar} disabled={calBusy}>
+                    {calBusy ? "Envoi vers Google Agenda…" : "Mettre mes blocs dans Google Agenda"}
+                  </button>
+                  {calResult && <p className="small" role="status">{calResult}</p>}
+                </div>
                 <button onClick={buildPlan} disabled={busy}>Refaire le plan</button>
               </>
             )}

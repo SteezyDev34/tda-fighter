@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useState } from "react";
 import { shiftDate, today } from "../lib/storage";
 import { usePersisted } from "../nutrition/useNutrition";
+import { GCAL_COLORS } from "./colors";
 import type { CuSpace, CuTask, Domain, Priority } from "./types";
 
 /** Error the screens show differently: no code yet, or ClickUp not set up. */
@@ -36,6 +37,8 @@ export function useTasks() {
   const [top3, setTop3] = usePersisted<Record<string, string[]>>("task-top3", {});
   /** Days on which tasks were completed, with how many. */
   const [doneDays, setDoneDays] = usePersisted<Record<string, number>>("task-done-days", {});
+  /** Google Calendar color of each project (ClickUp list). */
+  const [projectColors, setProjectColors] = usePersisted<Record<string, string>>("project-colors", {});
   /** The task chosen for « Maintenant ». */
   const [focusId, setFocusId] = usePersisted<string | null>("task-focus", null);
   const [loading, setLoading] = useState(false);
@@ -102,6 +105,14 @@ export function useTasks() {
     const space = spaces.find((s) => s.id === x.spaceId)?.name;
     const list = /^list[e]?$/i.test(x.listName) && (space || x.folderName) ? undefined : x.listName;
     return [space, x.folderName, list].filter(Boolean).join(" › ");
+  };
+  const allListIds = spaces.flatMap((s) => s.lists.map((l) => l.id));
+  /** Chosen color, or one given in list order so neighbours differ. */
+  const colorOf = (listId: string) =>
+    projectColors[listId] ?? GCAL_COLORS[Math.max(0, allListIds.indexOf(listId)) % GCAL_COLORS.length].id;
+  const nextColor = (listId: string) => {
+    const i = GCAL_COLORS.findIndex((c) => c.id === colorOf(listId));
+    setProjectColors((all) => ({ ...all, [listId]: GCAL_COLORS[(i + 1) % GCAL_COLORS.length].id }));
   };
   const inFilter = (t: CuTask) => domainFilter === "all" || domainOf(t.spaceId) === domainFilter;
 
@@ -177,6 +188,8 @@ export function useTasks() {
     setPersoSpaces,
     domainOf,
     pathOf,
+    colorOf,
+    nextColor,
     inFilter,
     domainFilter,
     setDomainFilter,

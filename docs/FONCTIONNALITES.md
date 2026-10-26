@@ -104,6 +104,7 @@ Reliée à ClickUp : les tâches viennent de ClickUp et chaque changement y est 
 | Plan de la semaine par l'IA (objectifs des projets, priorités, échéances, règle 1-3-5, énergie) avec conseils et tâches mises de côté | 🧪 |
 | Application du plan : chaque tâche reçoit son jour comme échéance dans ClickUp | ✅ |
 | Tâches datées mises de côté (« Pas cette semaine ») décalées automatiquement au lundi suivant | ✅ |
+| Envoi du plan dans Google Agenda : un bloc par tâche (durée avec marge) dans les créneaux libres des heures de travail, une couleur par projet | 🧪 |
 | Aujourd'hui : temps prévu face au temps possible, alerte si c'est trop | ✅ |
 
 ### Onglet Projets
@@ -112,6 +113,7 @@ Reliée à ClickUp : les tâches viennent de ClickUp et chaque changement y est 
 | Espaces et listes ClickUp classés en pro et perso, avec le nombre de tâches ouvertes | ✅ |
 | Ouvrir une liste et y ajouter des tâches | ✅ |
 | Réglages : espace pro ou perso, liste qui reçoit les captures | ✅ |
+| Couleur de chaque projet dans Google Agenda (pastille à toucher pour changer) | ✅ |
 
 ### À venir
 | Fonctionnalité | Statut |
