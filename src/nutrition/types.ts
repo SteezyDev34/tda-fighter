@@ -98,6 +98,11 @@ export interface WeekPlan {
 }
 
 export interface MealPlan {
+  /** Set when the plan is saved in the history of generated plans. */
+  id?: string;
+  createdAt?: string;
+  /** What was asked, e.g. "Toute la semaine", "Déjeuner". */
+  label?: string;
   meals: SuggestedMeal[];
   shopping: ShoppingItem[];
   week?: WeekPlan;

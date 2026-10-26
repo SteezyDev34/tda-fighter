@@ -69,7 +69,20 @@ function MealCard({ meal: m, date, logged, onLogged, customFoods, addEntries, re
   );
 }
 
-export function PlannerPage({ journal, profile, plan, setPlan, addEntries, rememberFood, customFoods }: NutritionState) {
+/** Generated plans kept on the device, newest first. */
+const MAX_PLANS = 30;
+
+const planWhen = (iso?: string) =>
+  iso ? new Date(iso).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "";
+
+export function PlannerPage({ journal, profile, plan, setPlan: setCurrent, addEntries, rememberFood, customFoods }: NutritionState) {
+  const [history, setHistory] = usePersisted<MealPlan[]>("plan-history", plan ? [{ ...plan, id: plan.id ?? "ancien", label: plan.label ?? "Plan précédent" }] : []);
+  const [showHistory, setShowHistory] = useState(false);
+  /** Changes to the open plan (ticked shopping, logged meals) are kept in the history too. */
+  const setPlan = (p: MealPlan) => {
+    setCurrent(p);
+    if (p.id) setHistory((h) => h.map((x) => (x.id === p.id ? p : x)));
+  };
   const [scope, setScope] = useState<Scope>("day");
   const [dayType, setDayType] = useState<DayType>("training");
   // The week starts today; training days are picked by weekday.
@@ -105,7 +118,16 @@ export function PlannerPage({ journal, profile, plan, setPlan, addEntries, remem
               }),
             });
       if (!res.ok) throw new Error(await res.text());
-      setPlan((await res.json()) as MealPlan);
+      const label =
+        scope === "week" ? "Toute la semaine" : scope === "day" ? "Toute la journée" : slotLabel(scope);
+      const created: MealPlan = {
+        ...((await res.json()) as MealPlan),
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+        label,
+      };
+      setHistory((h) => [created, ...h].slice(0, MAX_PLANS));
+      setCurrent(created);
       setSelectedDay(0);
     } catch (e) {
       setError(`La génération a échoué. Réessaie dans un instant. (${(e as Error).message})`);
@@ -181,6 +203,48 @@ export function PlannerPage({ journal, profile, plan, setPlan, addEntries, remem
         {error && <p className="error">{error}</p>}
       </div>
 
+      {history.length > 0 && (
+        <div className="card stack tight">
+          <button className="link start" onClick={() => setShowHistory((v) => !v)} aria-expanded={showHistory}>
+            {showHistory ? "Masquer" : "Voir"} mes plans précédents ({history.length})
+          </button>
+          {showHistory &&
+            history.map((h) => (
+              <div key={h.id} className="row">
+                <button
+                  className="result"
+                  aria-current={h.id === plan?.id}
+                  onClick={() => {
+                    setCurrent(h);
+                    setSelectedDay(0);
+                    setShowHistory(false);
+                  }}
+                >
+                  <span>
+                    {h.label ?? "Plan"}
+                    {h.id === plan?.id ? " (ouvert)" : ""}
+                  </span>
+                  <span className="small muted">
+                    {planWhen(h.createdAt)}
+                    {h.createdAt ? " · " : ""}
+                    {(h.week ? h.week.types.flatMap((t) => t.meals) : h.meals)
+                      .map((m) => m.name)
+                      .slice(0, 3)
+                      .join(", ")}
+                  </span>
+                </button>
+                <button
+                  className="link"
+                  aria-label={`Supprimer le plan ${h.label ?? ""}`}
+                  onClick={() => setHistory((all) => all.filter((x) => x.id !== h.id))}
+                >
+                  Supprimer
+                </button>
+              </div>
+            ))}
+        </div>
+      )}
+
       {week && (
         <div className="card stack tight">
           <span className="label">Ma semaine</span>
@@ -219,7 +283,7 @@ export function PlannerPage({ journal, profile, plan, setPlan, addEntries, remem
       {!week &&
         plan?.meals.map((m, i) => (
           <MealCard
-            key={i}
+            key={`${plan.id}-${i}`}
             meal={m}
             logged={!!m.logged}
             onLogged={() => setPlan({ ...plan, meals: plan.meals.map((x, j) => (j === i ? { ...x, logged: true } : x)) })}
