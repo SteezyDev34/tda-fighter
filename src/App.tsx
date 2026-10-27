@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SyncPanel } from "./lib/SyncPanel";
 import { usePersisted } from "./nutrition/useNutrition";
 import { CoachPage } from "./nutrition/CoachPage";
 import { JournalPage } from "./nutrition/JournalPage";
@@ -108,6 +109,7 @@ export default function App() {
               <span aria-hidden="true">{s.icon}</span> {s.label}
             </button>
           ))}
+          <SyncPanel />
         </aside>
 
         <main className="app" key={`${section.id}/${tab.id}`}>
