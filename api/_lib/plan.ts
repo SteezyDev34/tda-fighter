@@ -48,6 +48,8 @@ export const METHOD = `Suis la méthode des ressources :
 - choisis les aliments dans les listes de courses des ressources et donne les quantités exactes de « 1 apport » (version homme ou femme selon mon sexe) ;
 - ajoute les aliments brûle graisses imposés au déjeuner et au dîner, et les fruits ou crudités du mois en cours pour les apports E.
 Pour chaque ingrédient : "quantity" est la quantité lisible (ex. « 1 poignée »), "grams" son poids en grammes (ex. 30),
+pour le riz, les pâtes, les céréales, les légumineuses, les viandes et les poissons, "grams" est toujours le poids CUIT (comme dans les ressources)
+et "quantity" le précise (ex. « 200 g cuit ») ;
 "search" un nom simple et générique pour le trouver dans Open Food Facts (ex. « amandes », « blanc de poulet », « riz basmati »).
 Dans "apports", écris les apports du repas, par exemple « 2 TP + 1 BH + 1 MM + BG ».
 Varie par rapport à ce que j'ai mangé ces derniers jours et respecte mes goûts, allergies, budget et temps.`;

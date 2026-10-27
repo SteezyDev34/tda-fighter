@@ -1,7 +1,20 @@
 import { useEffect, useState } from "react";
 import { BarcodeScanner } from "./BarcodeScanner";
+import { CookingToggle } from "./CookingToggle";
 import { CreateFood } from "./CreateFood";
-import { findBarcode, matchFoods, normalize, scale, searchOff, SOURCE_LABEL, type Food } from "./foods";
+import {
+  convertGrams,
+  cookInfo,
+  COOKING_LABEL,
+  findBarcode,
+  matchFoods,
+  normalize,
+  scale,
+  searchOff,
+  SOURCE_LABEL,
+  type Cooking,
+  type Food,
+} from "./foods";
 import type { JournalEntry, RecentFood, SavedMeal } from "./types";
 
 type NewEntry = Pick<JournalEntry, "description" | "nutrients" | "food">;
@@ -23,6 +36,7 @@ export function FoodPicker({ savedMeals, recentFoods, customFoods, onCreateFood,
   const [searching, setSearching] = useState(false);
   const [picked, setPicked] = useState<Food | null>(null);
   const [grams, setGrams] = useState(100);
+  const [cooking, setCooking] = useState<Cooking>("raw");
   const [scanning, setScanning] = useState(false);
   const [notFound, setNotFound] = useState("");
   const [searchError, setSearchError] = useState(false);
@@ -69,6 +83,7 @@ export function FoodPicker({ savedMeals, recentFoods, customFoods, onCreateFood,
   const pick = (food: Food, lastGrams?: number) => {
     setPicked(food);
     setGrams(lastGrams ?? food.portionG ?? 100);
+    setCooking(cookInfo(food)?.base ?? "raw");
   };
 
   const reset = () => {
@@ -111,7 +126,11 @@ export function FoodPicker({ savedMeals, recentFoods, customFoods, onCreateFood,
   }
 
   if (picked) {
-    const n = scale(picked.per100g, grams);
+    // The values are for the food raw or cooked: convert the weighed grams to that state.
+    const info = cookInfo(picked);
+    const baseGrams = info ? convertGrams(info, grams, cooking, info.base) : grams;
+    const n = scale(picked.per100g, baseGrams);
+    const weight = info ? `${grams} g ${COOKING_LABEL[cooking]}` : `${grams} g`;
     return (
       <div className="stack">
         <div>
@@ -135,6 +154,7 @@ export function FoodPicker({ savedMeals, recentFoods, customFoods, onCreateFood,
             </button>
           ))}
         </div>
+        {info && <CookingToggle info={info} grams={grams} value={cooking} onChange={setCooking} />}
         <p className="small muted">
           {fmt(n.kcal)} kcal · P {fmt(n.protein)} g · G {fmt(n.carbs)} g · L {fmt(n.fat)} g
         </p>
@@ -143,8 +163,8 @@ export function FoodPicker({ savedMeals, recentFoods, customFoods, onCreateFood,
             className="primary"
             disabled={!grams}
             onClick={() => {
-              onAdd([{ description: `${picked.name} (${grams} g)`, nutrients: n, food: { id: picked.id, grams } }]);
-              onUseFood(picked, grams);
+              onAdd([{ description: `${picked.name} (${weight})`, nutrients: n, food: { id: picked.id, grams: baseGrams } }]);
+              onUseFood(picked, baseGrams);
               reset();
             }}
           >
@@ -243,8 +263,14 @@ function FoodResult({ food, grams, onPick }: { food: Food; grams?: number; onPic
         {food.brand && <span className="muted"> · {food.brand}</span>}
       </span>
       <span className="small muted">
-        {fmt(food.per100g.kcal)} kcal / 100 g{grams ? ` · dernière fois ${grams} g` : ""}
+        {fmt(food.per100g.kcal)} kcal / 100 g{cookLabel(food)}{grams ? ` · dernière fois ${grams} g` : ""}
       </span>
     </button>
   );
+}
+
+/** " cru" or " cuit" after "100 g", for the foods whose weight changes when cooked. */
+function cookLabel(food: Food) {
+  const info = cookInfo(food);
+  return info ? ` ${COOKING_LABEL[info.base]}` : "";
 }

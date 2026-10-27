@@ -16,6 +16,7 @@ Dernière mise à jour : 26/10/2026
 | Scan du code-barres (caméra sur Android/Chrome, sinon saisie du code) | ✅ |
 | Créer un aliment introuvable (nom, marque, code-barres scanné sur le produit, valeurs pour 100 g de l'étiquette) : il ressort ensuite dans la recherche, au scan et dans les repas générés | ✅ |
 | Choix de la quantité en grammes (raccourcis 50, 100, 150, 200 g ou portion du produit) avec aperçu des apports | ✅ |
+| Poids cru ou cuit : pour le riz, les pâtes, les céréales, les légumineuses, les viandes et les poissons, je choisis si j'ai pesé cru ou cuit, l'app recalcule les apports et affiche l'équivalent (ex. 200 g cuit ≈ 80 g cru) ; le journal note « 200 g cuit » ou « 80 g cru » | ✅ |
 | Aliments déjà utilisés en tête de liste, le dernier en premier, avec la dernière quantité | ✅ |
 | Enregistrer un repas (plusieurs aliments) sous un nom et le retrouver dans la recherche « Mes repas » | ✅ |
 | Graphique des apports du jour comparés aux objectifs, mis à jour à chaque aliment noté | ✅ |
@@ -37,6 +38,7 @@ Dernière mise à jour : 26/10/2026
 | Liste de courses générée depuis les repas, regroupée par rayon, cochable | 🧪 |
 | Historique des plans générés (journée, repas, semaine) : une nouvelle génération n'efface plus l'ancienne, je peux rouvrir ou supprimer un plan | ✅ |
 | Bouton « Ajouter au journal » sur un repas généré : chaque ingrédient est retrouvé dans Open Food Facts, je vérifie le produit et les grammes, je choisis le jour et le repas, puis j'ajoute (et je peux le rajouter si je l'ai retiré) | ✅ |
+| Quantités des repas générés en poids cuit (comme dans les ressources), avec le choix cru / cuit à l'ajout au journal : les apports sont recalculés selon le produit trouvé (riz cru ou cuit…) | 🧪 |
 | « Changer ce repas » : regénérer un seul repas qui ne plaît pas, en gardant les autres ; le nouveau complète leurs apports et la liste de courses est refaite (aussi dans le plan de la semaine) | 🧪 |
 | Retirer de la liste ce que j'ai déjà à la maison | 📋 |
 
