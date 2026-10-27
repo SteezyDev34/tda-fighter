@@ -88,6 +88,7 @@ Reliée à ClickUp : les tâches viennent de ClickUp et chaque changement y est 
 |---|---|
 | Capture rapide « Vider ma tête » (pro ou perso, pour aujourd'hui) envoyée dans ClickUp | ✅ |
 | Rangement auto par l'IA : choix du projet ClickUp, reformulation, date (« demain », « vendredi ») et priorité repérées | 🧪 |
+| Choix de la destination : l'IA range, projet existant, nouveau projet (dossier ClickUp + liste « Tâches ») ou nouvelle liste | ✅ |
 | Top 3 du jour (3 maximum) | ✅ |
 | Tâches en retard, pour aujourd'hui, cette semaine, sans date, plus tard | ✅ |
 | Compteur de tâches faites aujourd'hui et série de jours | ✅ |
