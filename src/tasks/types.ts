@@ -3,11 +3,14 @@ export interface CuList {
   id: string;
   name: string;
   folder?: string;
+  folderId?: string;
 }
 
 export interface CuSpace {
   id: string;
   name: string;
+  /** Projects of the space (ClickUp folders). Missing in data saved before. */
+  folders?: { id: string; name: string }[];
   lists: CuList[];
 }
 

@@ -3,7 +3,7 @@ import { shiftDate, today } from "../lib/storage";
 import { usePersisted } from "../nutrition/useNutrition";
 import { GCAL_COLORS } from "./colors";
 import { BUFFER, dayWindow, DEFAULT_MIN, DEFAULT_WINDOW, type WorkWindow } from "./week";
-import type { CuSpace, CuTask, Domain, Priority } from "./types";
+import type { CuList, CuSpace, CuTask, Domain, Priority } from "./types";
 
 /** Error the screens show differently: no code yet, or ClickUp not set up. */
 export type TasksError = { kind: "code" | "setup" | "other"; message: string };
@@ -182,6 +182,36 @@ export function useTasks() {
       return task;
     });
 
+  /** Adds a list returned by ClickUp to the local structure, so it can be used at once. */
+  const addList = (spaceId: string, list: CuList, folder?: { id: string; name: string }) =>
+    setSpaces((all) =>
+      all.map((s) =>
+        s.id !== spaceId
+          ? s
+          : {
+              ...s,
+              folders: folder && !s.folders?.some((f) => f.id === folder.id) ? [...(s.folders ?? []), folder] : s.folders,
+              lists: [...s.lists, list],
+            },
+      ),
+    );
+
+  /** A new project is a ClickUp folder with a first list « Tâches ». */
+  const createProject = (spaceId: string, name: string) =>
+    run(async () => {
+      const r = await call<{ folder: { id: string; name: string }; list: CuList }>({ action: "create-project", spaceId, name });
+      addList(spaceId, r.list, r.folder);
+      return r.list;
+    });
+
+  /** A new list, in a project (folder) or directly in the space. */
+  const createList = (spaceId: string, name: string, folderId?: string) =>
+    run(async () => {
+      const r = await call<{ list: CuList }>({ action: "create-list", spaceId, folderId, name });
+      addList(spaceId, r.list);
+      return r.list;
+    });
+
   const update = (task: CuTask, patch: { due?: number | null; priority?: Priority | null; estimate?: number | null }) =>
     run(async () => {
       // null removes a value, undefined keeps it.
@@ -234,6 +264,8 @@ export function useTasks() {
     doneDays,
     complete,
     create,
+    createProject,
+    createList,
     update,
     logTime,
   };

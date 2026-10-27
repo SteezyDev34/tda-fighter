@@ -35,6 +35,13 @@ interface RawList {
   task_count?: number;
 }
 
+const toList = (l: RawList, folder?: { id: string; name: string }): CuList => ({
+  id: l.id,
+  name: l.name,
+  folder: folder?.name,
+  folderId: folder?.id,
+});
+
 async function structure(): Promise<{ teamId: string; spaces: CuSpace[] }> {
   const team = await teamId();
   const { spaces } = await cu<{ spaces: { id: string; name: string }[] }>(`/team/${team}/space?archived=false`);
@@ -44,11 +51,11 @@ async function structure(): Promise<{ teamId: string; spaces: CuSpace[] }> {
         cu<{ folders: { id: string; name: string; lists: RawList[] }[] }>(`/space/${s.id}/folder?archived=false`),
         cu<{ lists: RawList[] }>(`/space/${s.id}/list?archived=false`),
       ]);
-      const toList = (l: RawList, folder?: string): CuList => ({ id: l.id, name: l.name, folder });
       return {
         id: s.id,
         name: s.name,
-        lists: [...lists.map((l) => toList(l)), ...folders.flatMap((f) => f.lists.map((l) => toList(l, f.name)))],
+        folders: folders.map((f) => ({ id: f.id, name: f.name })),
+        lists: [...lists.map((l) => toList(l)), ...folders.flatMap((f) => f.lists.map((l) => toList(l, f)))],
       };
     }),
   );
@@ -148,6 +155,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     due?: number | null;
     priority?: keyof typeof PRIORITY | null;
     parent?: string;
+    spaceId?: string;
+    folderId?: string;
     start?: number;
     duration?: number;
     /** Time estimate in ms, null to remove it. */
@@ -174,6 +183,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           },
         });
         return res.json({ task: toTask(task) });
+      }
+      case "create-project": {
+        // A new project: a folder in the space, with a first list for its tasks.
+        if (!body.spaceId || !body.name?.trim()) throw new HttpError(400, "Espace et nom obligatoires.");
+        const folder = await cu<{ id: string; name: string }>(`/space/${body.spaceId}/folder`, {
+          method: "POST",
+          body: { name: body.name.trim() },
+        });
+        const list = await cu<RawList>(`/folder/${folder.id}/list`, { method: "POST", body: { name: "Tâches" } });
+        return res.json({ spaceId: body.spaceId, folder: { id: folder.id, name: folder.name }, list: toList(list, folder) });
+      }
+      case "create-list": {
+        // In a project (folder), or directly in the space.
+        if (!body.name?.trim() || (!body.folderId && !body.spaceId)) throw new HttpError(400, "Emplacement et nom obligatoires.");
+        const path = body.folderId ? `/folder/${body.folderId}/list` : `/space/${body.spaceId}/list`;
+        const list = await cu<RawList & { folder?: { id: string; name: string; hidden?: boolean } }>(path, {
+          method: "POST",
+          body: { name: body.name.trim() },
+        });
+        const folder = body.folderId && list.folder ? { id: list.folder.id, name: list.folder.name } : undefined;
+        return res.json({ spaceId: body.spaceId, list: toList(list, folder) });
       }
       case "complete":
         if (!body.taskId) throw new HttpError(400, "Tâche manquante.");
