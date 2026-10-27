@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { shiftDate, today } from "../lib/storage";
-import { CaptureBox, DomainFilter, Gate, SyncLine, TaskRow } from "./parts";
+import { CaptureBox } from "./CaptureBox";
+import { DomainFilter, Gate, SyncLine, TaskRow } from "./parts";
 import { priorityRank, type CuTask } from "./types";
 import { dayOf, streak, useTasksState } from "./useTasks";
 import { usePersisted } from "../nutrition/useNutrition";

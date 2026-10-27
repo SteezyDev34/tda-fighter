@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { shiftDate, today } from "../lib/storage";
 import { usePersisted } from "../nutrition/useNutrition";
 import { colorHex } from "./colors";
-import { CaptureBox, DomainFilter, Gate, SyncLine } from "./parts";
+import { CaptureBox } from "./CaptureBox";
+import { DomainFilter, Gate, SyncLine } from "./parts";
 import type { CuTask } from "./types";
 import { dayOf, dueLabel, msOf, useTasksState } from "./useTasks";
 import {
