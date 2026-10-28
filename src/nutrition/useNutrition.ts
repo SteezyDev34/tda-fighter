@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { load, save, shiftDate, today } from "../lib/storage";
+import { useEffect, useRef, useState } from "react";
+import { CHANGED_EVENT, load, save, shiftDate, today } from "../lib/storage";
 import type { Food } from "./foods";
 import {
   EMPTY_PROFILE,
@@ -13,7 +13,27 @@ import {
 
 export function usePersisted<T>(key: string, fallback: T) {
   const [value, setValue] = useState<T>(() => load(key, fallback));
-  useEffect(() => save(key, value), [key, value]);
+  // The default is not written: on a new device it must not overwrite the synced value.
+  const written = useRef(JSON.stringify(value));
+  useEffect(() => {
+    const raw = JSON.stringify(value);
+    if (raw === written.current) return;
+    written.current = raw;
+    save(key, value);
+  }, [key, value]);
+
+  // Reloads when the value arrives from another device.
+  const fallbackRef = useRef(fallback);
+  useEffect(() => {
+    const reload = (e: Event) => {
+      if ((e as CustomEvent<string>).detail !== key) return;
+      const next = load(key, fallbackRef.current);
+      written.current = JSON.stringify(next);
+      setValue(next);
+    };
+    window.addEventListener(CHANGED_EVENT, reload);
+    return () => window.removeEventListener(CHANGED_EVENT, reload);
+  }, [key]);
   return [value, setValue] as const;
 }
 

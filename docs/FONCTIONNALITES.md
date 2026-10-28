@@ -3,7 +3,7 @@
 Mis à jour à chaque nouvelle fonctionnalité demandée.
 Statuts : ✅ codé · 🧪 codé, IA à brancher · 🎨 prototype seulement · 📋 prévu
 
-Dernière mise à jour : 26/10/2026
+Dernière mise à jour : 27/10/2026
 
 ## Nutrition
 
@@ -159,5 +159,7 @@ Reliée à ClickUp : les tâches viennent de ClickUp et chaque changement y est 
 | Retour sur la dernière section et le dernier onglet ouverts | ✅ |
 | Base de connaissances : lecture des .md du dossier Google Drive « TDA Fighter - Nutrition » | 🧪 |
 | Bascule automatique sur un autre modèle d'IA si une question est refusée | 🧪 |
-| Comptes et synchronisation entre appareils | 📋 |
+| Synchronisation entre appareils : données gardées en ligne (Upstash Redis sur Vercel), appareil relié avec le code d'accès de l'app | ✅ |
+| Reprise automatique des données déjà saisies sur chaque appareil, fusionnées sans rien perdre à la première synchro | ✅ |
+| Fonctionne hors ligne : les changements partent au retour du réseau | ✅ |
 | Notifications de rappel | 📋 |
